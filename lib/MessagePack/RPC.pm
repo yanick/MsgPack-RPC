@@ -1,13 +1,12 @@
-package Neovim::RPC;
+package MessagePack::RPC;
 
 use strict;
 use warnings;
 
 use Moose;
 use IO::Socket::INET;
-use Neovim::RPC::API::AutoDiscover;
 use MessagePack::Decoder;
-use Neovim::RPC::Event;
+use MessagePack::RPC::Event;
 use Future;
 
 use experimental 'signatures';
@@ -22,11 +21,6 @@ has "host" => (
     is => 'ro',
     lazy => 1,
     default => sub { ( split ':', $_[0]->nvim_listen_address )[0] },
-);
-
-has nvim_listen_address => (
-    is => 'ro',
-    default => sub { $ENV{NVIM_LISTEN_ADDRESS} },
 );
 
 has "port" => (
@@ -60,16 +54,7 @@ has decoder => (
     },
 );
 
-has "api" => (
-    is => 'ro',
-    lazy => 1,
-    default => sub {
-        my $self = shift;
-        Neovim::RPC::API::AutoDiscover->new( rpc => $self, logger => $self->logger );      
-    },
-);
-
-has "reply_callbacks" => (
+has "response_callbacks" => (
     is => 'ro',
     lazy => 1,
     default => sub {
@@ -80,17 +65,13 @@ has "reply_callbacks" => (
 sub add_reply_callback {
     my( $self, $id ) = @_;
     my $future = Future->new;
-    $self->reply_callbacks->{$id} = {
+    $self->response_callbacks->{$id} = {
         timestamp => time,
         future => $future,
     };
 
     $future;
 }
-
-before subscribe => sub($self,$event,@){
-    $self->api->vim_subscribe( event => $event );
-};
 
 sub send($self,$struct) {
     $self->log( [ "sending %s", $struct] );
