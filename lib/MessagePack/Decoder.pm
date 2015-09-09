@@ -1,9 +1,43 @@
 package MessagePack::Decoder;
+# ABSTRACT: Decode data from a MessagePack stream
+
+=head1 SYNOPSIS
+
+    use MessagePack::Decoder;
+
+    use MessagePack::Encoder;
+    use Data::Printer;
+
+    my $decoder = MessagePack::Decoder->new;
+
+    my $msgpack_binary = MessagePack::Encoder->new(struct => [ "hello world" ] )->encoded;
+
+    $decoder->read( $msgpack_binary );
+
+    my $struct = $decode->next;  
+
+    p $struct;    # prints [ 'hello world' ]
+
+    
+=head2 DESCRIPTION
+
+C<MessagePack::Decoder> objects take in the raw binary representation of 
+one or more MessagePack data structures, and convert it back into their
+Perl representations.
+
+=head2 METHODS
+
+This class consumes L<MooseX::Role::Loggable>, and thus inherits all of its
+methods.
+
+=cut
 
 use 5.20.0;
 
 use strict;
 use warnings;
+
+use MessagePack::Type::Boolean;
 
 use Moose;
 
@@ -16,6 +50,66 @@ use experimental 'signatures', 'postderef';
 with 'MooseX::Role::Loggable' => {
     -excludes => [ 'Bool' ],
 };
+
+=head3 read( @binary_values ) 
+
+Reads in the raw binary to convert. The binary can be only a partial piece of the 
+encoded structures.  If so, all structures that can be decoded will be
+made available in the buffer, while the potentially last unterminated structure will
+remain "in flight".
+
+Returns how many structures were decoded.
+
+=cut
+
+sub read($self,@values) {
+    $self->log_debug( [ "raw bytes: %s", \@values ] );
+
+    my @new = gather {
+        $self->gen_next( 
+            reduce {
+                my $g = $a->($b);
+                is_gen($g) or do { take $$g; gen_new_value() }
+            } $self->gen_next => map { ord } map { split '' } @values
+        );
+    };
+
+    $self->add_to_buffer(@new);
+
+    return scalar @new;
+}
+
+
+=head3 has_buffer
+
+Returns the number of decoded structures currently waiting in the buffer.
+
+=head3 next
+
+Returns the next structure from the buffer.
+
+    $decoder->read( $binary );
+
+    while( $decoder->has_buffer ) {
+        my $next = $decoder->next;
+        do_stuff( $next );
+    }
+
+Note that the returned structure could be C<undef>, so don't do:
+
+    $decoder->read( $binary );
+
+    # NO! $next could be 'undef'
+    while( my $next = $decoder->next ) {
+        do_stuff( $next );
+    }
+
+=head3 all 
+
+Returns (and flush from the buffer) all the currently available structures.
+
+=cut
+
 
 has buffer => (
     is => 'rw',
@@ -33,7 +127,6 @@ after all => sub($self) {
     $self->buffer([]);
 };
 
-
 has gen_next => (
     is =>  'rw',
     clearer => 'clear_gen_next',
@@ -43,21 +136,26 @@ has gen_next => (
 
 );
 
-sub is_gen($val) { ref $val eq 'CODE' and $val }
+=head3 read_all( @binaries )
 
-sub read($self,@values) {
-    $self->log_debug( [ "raw bytes: %s", \@values ] );
+Reads the provided binary data and returns all structured decoded so far.
 
-    $self->add_to_buffer( gather {
-        $self->gen_next( 
-            reduce {
-                my $g = $a->($b);
-                is_gen($g) or do { take $$g; gen_new_value() }
-            } $self->gen_next => map { ord } map { split '' } @values
-        );
-    } );
+    
+    @data = $decoder->read_all($binary);
 
+    # equivalent to
+    
+    $decoder->read(@binaries);
+    @data = $decoder->all;
+
+=cut
+
+sub read_all($self,@vals){
+    $self->read(@vals);
+    $self->all;
 }
+
+sub is_gen($val) { ref $val eq 'CODE' and $val }
 
 use Types::Standard qw/ Str ArrayRef Int Any InstanceOf Ref /;
 use Type::Tiny;
@@ -69,9 +167,11 @@ my $MessagePackGenerator  = Type::Tiny->new(
 
 my @msgpack_types = (
     [ PositiveFixInt => [    0, 0x7f ], \&gen_positive_fixint ],
+    [ NegativeFixInt => [  0xe0, 0xff ], \&gen_negative_fixint ],
     [ FixArray       => [ 0x90, 0x9f ], \&gen_fixarray ],
     [ Array16       => [ 0xdc ], \&gen_array16 ],
     [ FixMap         => [ 0x80, 0x8f ], \&gen_fixmap ],
+    [ FixStr         => [ 0xa0, 0xbf ], \&gen_fixstr ],
     [ Uint64         => [ 0xcf ], \&gen_uint64 ],
     [ Bin8           => [ 0xc4 ], \&gen_bin8 ],
     [ Nil            => [ 0xc0 ], \&gen_nil ],
@@ -90,17 +190,27 @@ $MessagePackGenerator = $MessagePackGenerator->plus_coercions(
     } @msgpack_types
 );
 
-sub  gen_true { my $x = 1; \$x }
-sub  gen_false { my $x = 0; \$x }
+sub  gen_true  { my $x = MessagePack::Type::Boolean->new(1); \$x }
+sub  gen_false { my $x = MessagePack::Type::Boolean->new(0); \$x }
 
-sub read_n_bytes_as_int($size) {
-    my $num = 0;
+sub read_n_bytes($size) {
+    my $value = '';
 
     sub($byte) {
-        warn $byte;
-        $num = $byte + ($num << 8);
-        warn $num;
-        --$size ? __SUB__ : $num;
+        $value .= chr $byte;
+        --$size ? __SUB__ : $value;
+    }
+}
+
+sub read_n_bytes_as_int($size) {
+    my $gen = read_n_bytes($size);
+
+    sub($byte) {
+        $gen = $gen->($byte);
+
+        return __SUB__ if is_gen($gen);
+
+        reduce { ( $a << 8 ) + $b } map { ord } split '', $gen;
     }
 }
 
@@ -153,6 +263,7 @@ sub gen_unsignedint {
 }
 
 sub gen_positive_fixint { \$_  }
+sub gen_negative_fixint { my $x = 0xe0 - $_; \$x; }
 
 sub gen_fixarray {
     gen_array( $_ - 0x90 );
@@ -161,6 +272,19 @@ sub gen_fixarray {
 sub gen_fixmap {
     gen_map($_ - 0x80);
 }
+
+sub gen_fixstr {
+    gen_str( $_ - 0xa0 );
+}
+
+sub gen_str($size) {
+    my $gen = read_n_bytes($size);
+    sub($byte) {
+        $gen = $gen->($byte);
+        is_gen($gen) ? __SUB__ : \$gen;
+    }
+}
+
 
 sub gen_map($size) {
     return \{} unless $size;

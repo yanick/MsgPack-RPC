@@ -1,4 +1,17 @@
 package MessagePack::Encoder;
+# ABSTRACT: Encode a structure into a MessagePack binary string
+
+=head1 SYNOPSIS
+
+    use MessagePack::Encoder;
+
+    my $binary = MessagePack::Encoder->new( struct => [ "hello world" ] );
+
+    use MessagePack::Decoder;
+
+    my $struct = MessagePack::Decoder->new->read_all($binary);
+
+=cut
 
 use strict;
 use warnings;
@@ -9,14 +22,20 @@ use experimental 'postderef';
 
 use overload '""' => \&encoded;
 
-use Types::Standard qw/ Str ArrayRef Ref Int Any InstanceOf Undef /;
+use Types::Standard qw/ Str ArrayRef Ref Int Any InstanceOf Undef HashRef /;
 use Type::Tiny;
 
 
 my $PositiveFixInt = Type::Tiny->new(
     parent => Int,
     name => 'PositiveFixint',
-    constraint => sub { $_ >= 0 and $_ < 2*8-1 },
+    constraint => sub { $_ >= 0 and $_ < (2**8)-1 },
+);
+
+my $NegativeFixInt = Type::Tiny->new(
+    parent => Int,
+    name => 'NegativeFixint',
+    constraint => sub { $_ < 0 and $_ > 2**5 },
 );
 
 my $Str8 = Type::Tiny->new(
@@ -42,16 +61,30 @@ my $Nil = Type::Tiny->new(
     name => 'Nil',
 );
 
+my $FixMap = Type::Tiny->new(
+    parent => HashRef,
+    name => 'FixMap',
+    constraint => sub { keys %$_ < 16 }
+);
+
+my $Boolean = Type::Tiny->new(
+    parent => InstanceOf['MessagePack::Type::Boolean'],
+    name => 'Boolean'
+);
+
 
 my $MessagePack = Type::Tiny->new(
     parent => InstanceOf['MessagePacked'],
     name => 'MessagePack',
 )->plus_coercions(
+    $Boolean => \&encode_boolean,
     $PositiveFixInt      ,=> \&encode_positive_fixint,
+    $NegativeFixInt      ,=> \&encode_negative_fixint,
     $FixStr ,=> \&encode_fixstr,
     $Str8 ,=> \&encode_str8,
     $FixArray ,=> \&encode_fixarray,
     $Nil => \&encode_nil,
+    $FixMap => \&encode_fixmap,
 );
 
 has struct => (
@@ -69,14 +102,24 @@ sub BUILDARGS {
 sub encoded {
     my $self = shift;
     my $x = $MessagePack->assert_coerce($self->struct);
-    use Data::Printer;
-    p $x;
     return $$x;
 }
 
 sub _packed($) {
     my $value = shift;
     bless \$value, 'MessagePacked';
+}
+
+sub encode_boolean{
+    _packed chr 0xc2 + $_;
+}
+
+sub encode_fixmap {
+    my @inner = %{ shift @_ };
+    
+    my $size = @inner/2;
+
+    _packed join '', chr( 0x80 + $size ), map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
 }
 
 sub encode_str8 {
@@ -93,6 +136,12 @@ sub encode_positive_fixint {
     my $int = shift;
 
     _packed chr $int;
+}
+
+sub encode_negative_fixint {
+    my $int = shift;
+
+    _packed chr( 0xe0 - $int );
 }
 
 sub encode_nil {

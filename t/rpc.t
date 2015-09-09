@@ -4,44 +4,65 @@ use strict;
 use warnings;
 
 use Test::More tests => 1;
+use Test::Deep;
 
 use MessagePack::RPC;
 
 use experimental 'signatures';
 
-open my $input_fh,  '<',  \my $input;
-open my $output_fh, '>>', \my $output;
+sub cmp_msgpack(@) {
+    state $decoder = MessagePack::Decoder->new;
+    my( $has, $expected, $comment ) = @_;
+    $decoder->read(<$has>);
+    $has = $decoder->next;
+
+    cmp_deeply $has => $expected, $comment
+        or diag explain $has;
+}
+
+open my $input_fh,  '<', \my $input;
+open my $output_fh, '>', \my $output;
 
 my $rpc = MessagePack::RPC->new(
-    io => [ $input, $output ],
+    io => [ $input_fh, $output_fh ],
 );
 
 $rpc->request( 'method' => [ qw/ param1 param2 / ] );
 
-is $output => 'TBD', "request encapsulated";
+open my $io, '<', \$output;
+open my $io_in, '>>', \$input;
 
-$output = undef;
+cmp_msgpack $io => [0,1,'method',[qw/ param1 param2/]], "request encapsulated";
+
+$rpc->request( 'method' => [ qw/ param1 param2 / ] );
+
+cmp_msgpack $io => [0,2,'method',[qw/ param1 param2/]], "id increments";
+
 
 $rpc->notify( 'psst' => [ qw/ param3 param4 / ] );
 
-is $output => 'TBD', "notification";
+cmp_msgpack $io => [2,'psst',[qw/ param3 param4 /] ], "notification";
 
-$input = "request";
+print $io_in MessagePack::Encoder->new( struct => [
+    0, 10, 'myrequest', [ 1 ]
+])->encoded;
 
 $rpc->loop(1);
 
 pass "okay";
 
 subtest 'request -> reply' => sub {
-    $rpc->subscribe( my_request => sub ($msg) {
+    $rpc->subscribe( myrequest => sub ($msg) {
         $msg->reply( 'okay' );
     });
 
-    $input = "send  my request";
+    print $io_in MessagePack::Encoder->new( struct => [
+        0, 15, 'myrequest', [ 1 ]
+    ])->encoded;
 
     $rpc->loop(1);
 
-    is $output => 'okay';
+    cmp_msgpack $io => [1,15,undef,"okay"], "reply to request";
 };
 
 

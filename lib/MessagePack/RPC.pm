@@ -1,4 +1,5 @@
 package MessagePack::RPC;
+# ABSTRACT: MessagePack RPC client
 
 use strict;
 use warnings;
@@ -6,6 +7,7 @@ use warnings;
 use Moose;
 use IO::Socket::INET;
 use MessagePack::Decoder;
+use MessagePack::Encoder;
 use MessagePack::RPC::Event;
 use Future;
 
@@ -15,6 +17,24 @@ with 'Beam::Emitter';
 with 'MooseX::Role::Loggable' => {
     -excludes => [ 'Bool' ],
 };
+
+has io => (
+    required => 1,
+    is       => 'ro',
+    trigger  => sub($self,$io,@) {
+        if( ref $io eq 'ARRAY' ) {
+            $self->_io_read(sub{ getc $io->[0] });
+
+            $self->_io_write(sub(@stuff){
+                print { $io->[1] } @stuff
+                    or die "couldn't write to output\n";
+            });
+        }
+    },
+);
+
+has [ qw/ _io_read _io_write / ] => ( is => 'rw' );
+
 
 has "host" => (
     isa => 'Str',
@@ -62,7 +82,7 @@ has "response_callbacks" => (
     },
 );
 
-sub add_reply_callback {
+sub add_responce_callback {
     my( $self, $id ) = @_;
     my $future = Future->new;
     $self->response_callbacks->{$id} = {
@@ -73,28 +93,38 @@ sub add_reply_callback {
     $future;
 }
 
+sub request($self,$method,$args=[],$id=++$MessagePack::RPC::MSG_ID) {
+    $self->send([ 0, $id, $method, $args ]);
+    $self->add_responce_callback($id);
+}
+
+sub notify($self,$method,$args=[]) {
+    $self->send([2,$method,$args]);
+}
+
 sub send($self,$struct) {
     $self->log( [ "sending %s", $struct] );
 
     my $encoded = MessagePack::Encoder->new(struct => $struct)->encoded;
 
     $self->log_debug( [ "encoded: %s", $encoded ] );
-    $self->socket->send($encoded);
+    $self->_io_write->($encoded);
 }
 
 sub loop {
     my $self = shift;
-    my %args = @_;
+    my $until = shift;
 
-    while (read($self->socket, my $buf, 1)) {
-        $self->decoder->read($buf);
+    while ( my $byte = $self->_io_read->() ) {
+        $self->decoder->read( $byte );
+
         while( $self->decoder->has_buffer ) {
             my $next = $self->decoder->next;
             $self->log( [ "receiving %s" , $next ]);
 
             if ( $next->[0] == 1 ) {
-                $self->log_debug( [ "it's a reply for %d", $next->[1] ] );
-                if( my $callback =  $self->reply_callbacks->{$next->[1]} ) {
+                $self->log_debug( [ "it's a response for %d", $next->[1] ] );
+                if( my $callback =  $self->response_callbacks->{$next->[1]} ) {
                     my $f = $callback->{future};
                     $next->[2] 
                         ? $f->fail($next->[2])
@@ -112,7 +142,8 @@ sub loop {
                     event_id => $next->[1] );     
             }
 
-            return if $args{until} and $args{until}->();
+            return if $until and not --$until;
+
         }
     }
 }
