@@ -3,15 +3,15 @@ use 5.20.0;
 use strict;
 use warnings;
 
-use Test::More tests => 1;
+use Test::More tests => 5;
 use Test::Deep;
 
-use MessagePack::RPC;
+use MsgPack::RPC;
 
 use experimental 'signatures';
 
 sub cmp_msgpack(@) {
-    state $decoder = MessagePack::Decoder->new;
+    state $decoder = MsgPack::Decoder->new;
     my( $has, $expected, $comment ) = @_;
     $decoder->read(<$has>);
     $has = $decoder->next;
@@ -23,7 +23,7 @@ sub cmp_msgpack(@) {
 open my $input_fh,  '<', \my $input;
 open my $output_fh, '>', \my $output;
 
-my $rpc = MessagePack::RPC->new(
+my $rpc = MsgPack::RPC->new(
     io => [ $input_fh, $output_fh ],
 );
 
@@ -43,7 +43,7 @@ $rpc->notify( 'psst' => [ qw/ param3 param4 / ] );
 
 cmp_msgpack $io => [2,'psst',[qw/ param3 param4 /] ], "notification";
 
-print $io_in MessagePack::Encoder->new( struct => [
+print $io_in MsgPack::Encoder->new( struct => [
     0, 10, 'myrequest', [ 1 ]
 ])->encoded;
 
@@ -53,10 +53,10 @@ pass "okay";
 
 subtest 'request -> reply' => sub {
     $rpc->subscribe( myrequest => sub ($msg) {
-        $msg->reply( 'okay' );
+        $msg->response->done( 'okay' );
     });
 
-    print $io_in MessagePack::Encoder->new( struct => [
+    print $io_in MsgPack::Encoder->new( struct => [
         0, 15, 'myrequest', [ 1 ]
     ])->encoded;
 

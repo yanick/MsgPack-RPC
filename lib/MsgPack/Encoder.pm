@@ -1,15 +1,44 @@
-package MessagePack::Encoder;
+package MsgPack::Encoder;
 # ABSTRACT: Encode a structure into a MessagePack binary string
 
 =head1 SYNOPSIS
 
-    use MessagePack::Encoder;
+    use MsgPack::Encoder;
 
-    my $binary = MessagePack::Encoder->new( struct => [ "hello world" ] );
+    my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
 
-    use MessagePack::Decoder;
+    use MsgPack::Decoder;
 
-    my $struct = MessagePack::Decoder->new->read_all($binary);
+    my $struct = MsgPack::Decoder->new->read_all($binary);
+
+=head1 DESCRIPTION
+
+C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
+its MessagePack serialization.
+
+=head1 OVERLOADING
+
+=head2 Stringification
+
+The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
+
+
+    print MsgPack::Encoder->new( struct => $foo );
+    
+    # equivalent to
+
+    print MsgPack::Encoder->new( struct => $foo )->encoded;
+
+=head1 METHODS
+
+=head2 new( struct => $perl_struct )
+
+The constructor accepts a single argument, C<struct>, which is the perl structure (or simple scalar)
+to encode.
+
+=head2 encoded
+
+Returns the MessagePack representation of the structure.
 
 =cut
 
@@ -25,11 +54,13 @@ use overload '""' => \&encoded;
 use Types::Standard qw/ Str ArrayRef Ref Int Any InstanceOf Undef HashRef /;
 use Type::Tiny;
 
+use MsgPack::Type::Ext;
+
 
 my $PositiveFixInt = Type::Tiny->new(
     parent => Int,
     name => 'PositiveFixint',
-    constraint => sub { $_ >= 0 and $_ < (2**8)-1 },
+    constraint => sub { $_ >= 0 and $_ < 2**8 },
 );
 
 my $NegativeFixInt = Type::Tiny->new(
@@ -41,13 +72,13 @@ my $NegativeFixInt = Type::Tiny->new(
 my $Str8 = Type::Tiny->new(
     parent => Str,
     name => 'Str8',
-    constaints => sub { length $_ <= 2**8 - 1 }
+    constaints => sub { length $_ < 2**8 }
 );
 
 my $FixStr = Type::Tiny->new(
     parent => $Str8,
     name => 'FixStr',
-    constaints => sub { length $_ <= 31 }
+    constraint => sub { length $_ <= 31 }
 );
 
 my $FixArray = Type::Tiny->new(
@@ -68,8 +99,14 @@ my $FixMap = Type::Tiny->new(
 );
 
 my $Boolean = Type::Tiny->new(
-    parent => InstanceOf['MessagePack::Type::Boolean'],
+    parent => InstanceOf['MsgPack::Type::Boolean'],
     name => 'Boolean'
+);
+
+my $FixExt1 = Type::Tiny->new(
+    parent => InstanceOf['MsgPack::Type::Ext'],
+    name => 'FixExt1',
+    constraint => sub { $_->fix and $_->size == 1 },
 );
 
 
@@ -85,6 +122,7 @@ my $MessagePack = Type::Tiny->new(
     $FixArray ,=> \&encode_fixarray,
     $Nil => \&encode_nil,
     $FixMap => \&encode_fixmap,
+    $FixExt1 => \&encode_fixext1,
 );
 
 has struct => (
@@ -120,6 +158,11 @@ sub encode_fixmap {
     my $size = @inner/2;
 
     _packed join '', chr( 0x80 + $size ), map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
+}
+
+sub encode_fixext1 {
+    my $ext = shift;
+    _packed chr( 0xd4 ) . chr( $ext->type ) . $ext->padded_data;
 }
 
 sub encode_str8 {

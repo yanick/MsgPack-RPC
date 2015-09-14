@@ -1,16 +1,16 @@
-package MessagePack::Decoder;
+package MsgPack::Decoder;
 # ABSTRACT: Decode data from a MessagePack stream
 
 =head1 SYNOPSIS
 
-    use MessagePack::Decoder;
+    use MsgPack::Decoder;
 
-    use MessagePack::Encoder;
+    use MsgPack::Encoder;
     use Data::Printer;
 
-    my $decoder = MessagePack::Decoder->new;
+    my $decoder = MsgPack::Decoder->new;
 
-    my $msgpack_binary = MessagePack::Encoder->new(struct => [ "hello world" ] )->encoded;
+    my $msgpack_binary = MsgPack::Encoder->new(struct => [ "hello world" ] )->encoded;
 
     $decoder->read( $msgpack_binary );
 
@@ -21,13 +21,13 @@ package MessagePack::Decoder;
     
 =head2 DESCRIPTION
 
-C<MessagePack::Decoder> objects take in the raw binary representation of 
+C<MsgPack::Decoder> objects take in the raw binary representation of 
 one or more MessagePack data structures, and convert it back into their
 Perl representations.
 
 =head2 METHODS
 
-This class consumes L<MooseX::Role::Loggable>, and thus inherits all of its
+This class consumes L<MooseX::Role::Loggable>, and inherits all of its
 methods.
 
 =cut
@@ -37,7 +37,7 @@ use 5.20.0;
 use strict;
 use warnings;
 
-use MessagePack::Type::Boolean;
+use MsgPack::Type::Boolean;
 
 use Moose;
 
@@ -172,11 +172,14 @@ my @msgpack_types = (
     [ Array16       => [ 0xdc ], \&gen_array16 ],
     [ FixMap         => [ 0x80, 0x8f ], \&gen_fixmap ],
     [ FixStr         => [ 0xa0, 0xbf ], \&gen_fixstr ],
+    [ Str8           => [ 0xd9 ], \&gen_str8 ],
     [ Uint64         => [ 0xcf ], \&gen_uint64 ],
     [ Bin8           => [ 0xc4 ], \&gen_bin8 ],
     [ Nil            => [ 0xc0 ], \&gen_nil ],
     [ True           => [ 0xc3 ], \&gen_true ],
     [ False          => [ 0xc2 ], \&gen_false ],
+    [ Int8           => [ 0xd0 ], \&gen_int8 ],
+    [ FixExt1        => [ 0xd4 ], \&gen_fixext1 ],
 );
 
 $MessagePackGenerator = $MessagePackGenerator->plus_coercions(
@@ -190,15 +193,15 @@ $MessagePackGenerator = $MessagePackGenerator->plus_coercions(
     } @msgpack_types
 );
 
-sub  gen_true  { my $x = MessagePack::Type::Boolean->new(1); \$x }
-sub  gen_false { my $x = MessagePack::Type::Boolean->new(0); \$x }
+sub  gen_true  { my $x = MsgPack::Type::Boolean->new(1); \$x }
+sub  gen_false { my $x = MsgPack::Type::Boolean->new(0); \$x }
 
 sub read_n_bytes($size) {
     my $value = '';
 
     sub($byte) {
         $value .= chr $byte;
-        --$size ? __SUB__ : $value;
+        --$size ? __SUB__ : \$value;
     }
 }
 
@@ -210,7 +213,17 @@ sub read_n_bytes_as_int($size) {
 
         return __SUB__ if is_gen($gen);
 
-        reduce { ( $a << 8 ) + $b } map { ord } split '', $gen;
+        my $x = reduce { ( $a << 8 ) + $b } map { ord } split '', $$gen;
+        return \$x;
+    }
+}
+
+sub gen_str8 {
+    my $gen = read_n_bytes_as_int(1);
+
+    sub($byte) {
+        $gen = $gen->($byte);
+        is_gen($gen) ? __SUB__ : gen_str($$gen);
     }
 }
 
@@ -220,7 +233,7 @@ sub gen_array16 {
     sub($byte) {
         $size = $size->($byte);
 
-        is_gen($size) ? __SUB__ : gen_array($size);
+        is_gen($size) ? __SUB__ : gen_array($$size);
     };
 }
 
@@ -230,6 +243,18 @@ sub gen_nil {
 
 sub gen_new_value { 
     sub ($byte) { $MessagePackGenerator->assert_coerce($byte); } 
+}
+
+sub gen_int8 {
+    gen_int(1);
+}
+
+sub gen_int($size) {
+    my $gen = read_n_bytes($size);
+    sub($byte) {
+        $gen = $gen->($byte);
+        is_gen($gen) ? __SUB__ : $gen;
+    }
 }
 
 sub gen_bin8 {
@@ -262,6 +287,26 @@ sub gen_unsignedint {
     }
 }
 
+sub gen_fixext1 {
+    my $gen = read_n_bytes(2);
+    sub($byte) {
+        $gen = $gen->($byte);
+        return __SUB__ if is_gen($gen);
+
+        my($type, $data) = split '', $$gen, 2;
+        $type = ord $type;
+        my $ext = MsgPack::Type::Ext->new(
+            fix  => 1,
+            size => 1,
+            data => $data,
+            type => $type,
+        );
+
+        return \$ext;
+
+    }
+}
+
 sub gen_positive_fixint { \$_  }
 sub gen_negative_fixint { my $x = 0xe0 - $_; \$x; }
 
@@ -281,7 +326,7 @@ sub gen_str($size) {
     my $gen = read_n_bytes($size);
     sub($byte) {
         $gen = $gen->($byte);
-        is_gen($gen) ? __SUB__ : \$gen;
+        is_gen($gen) ? __SUB__ : $gen;
     }
 }
 

@@ -1,4 +1,4 @@
-package MessagePack::Type::Boolean;
+package MsgPack::Type::Boolean;
 
 use strict;
 use warnings;
