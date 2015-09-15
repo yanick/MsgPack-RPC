@@ -16,6 +16,33 @@ package MsgPack::Encoder;
 C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
 its MessagePack serialization.
 
+=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
+
+I'm implementing the different messagepack types as I go along. So far, the
+current types are supported:
+
+=over
+
+=item Boolean
+
+=item PositiveFixInt
+
+=item NegativeFixInt
+
+=item FixStr
+
+=item Str8
+
+=item FixArray
+
+=item Nil
+
+=item FixMap
+
+=item FixExt1
+
+=back
+
 =head1 OVERLOADING
 
 =head2 Stringification

@@ -25,6 +25,33 @@ C<MsgPack::Decoder> objects take in the raw binary representation of
 one or more MessagePack data structures, and convert it back into their
 Perl representations.
 
+=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
+
+I'm implementing the different messagepack types as I go along. So far, the
+current types are supported:
+
+=over
+
+=item Boolean
+
+=item PositiveFixInt
+
+=item NegativeFixInt
+
+=item FixStr
+
+=item Str8
+
+=item FixArray
+
+=item Nil
+
+=item FixMap
+
+=item FixExt1
+
+=back
+
 =head2 METHODS
 
 This class consumes L<MooseX::Role::Loggable>, and inherits all of its

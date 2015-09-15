@@ -111,6 +111,17 @@ fulfilled.
     $rpc->loop(100);
 
 
+=head1 SEE ALSO
+
+=over
+
+=item L<MsgPack::RPC::Message>
+
+=item L<MsgPack::RPC::Message::Request>
+
+=back
+
+
 =cut
 
 use strict;
