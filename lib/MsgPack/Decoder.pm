@@ -1,63 +1,7 @@
 package MsgPack::Decoder;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: Decode data from a MessagePack stream
-
-=head1 SYNOPSIS
-
-    use MsgPack::Decoder;
-
-    use MsgPack::Encoder;
-    use Data::Printer;
-
-    my $decoder = MsgPack::Decoder->new;
-
-    my $msgpack_binary = MsgPack::Encoder->new(struct => [ "hello world" ] )->encoded;
-
-    $decoder->read( $msgpack_binary );
-
-    my $struct = $decode->next;  
-
-    p $struct;    # prints [ 'hello world' ]
-
-    
-=head2 DESCRIPTION
-
-C<MsgPack::Decoder> objects take in the raw binary representation of 
-one or more MessagePack data structures, and convert it back into their
-Perl representations.
-
-=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
-
-I'm implementing the different messagepack types as I go along. So far, the
-current types are supported:
-
-=over
-
-=item Boolean
-
-=item PositiveFixInt
-
-=item NegativeFixInt
-
-=item FixStr
-
-=item Str8
-
-=item FixArray
-
-=item Nil
-
-=item FixMap
-
-=item FixExt1
-
-=back
-
-=head2 METHODS
-
-This class consumes L<MooseX::Role::Loggable>, and inherits all of its
-methods.
-
-=cut
+$MsgPack::Decoder::VERSION = '0.0.1';
 
 use 5.20.0;
 
@@ -78,16 +22,6 @@ with 'MooseX::Role::Loggable' => {
     -excludes => [ 'Bool' ],
 };
 
-=head3 read( @binary_values ) 
-
-Reads in the raw binary to convert. The binary can be only a partial piece of the 
-encoded structures.  If so, all structures that can be decoded will be
-made available in the buffer, while the potentially last unterminated structure will
-remain "in flight".
-
-Returns how many structures were decoded.
-
-=cut
 
 sub read($self,@values) {
     $self->log_debug( [ "raw bytes: %s", \@values ] );
@@ -107,35 +41,6 @@ sub read($self,@values) {
 }
 
 
-=head3 has_buffer
-
-Returns the number of decoded structures currently waiting in the buffer.
-
-=head3 next
-
-Returns the next structure from the buffer.
-
-    $decoder->read( $binary );
-
-    while( $decoder->has_buffer ) {
-        my $next = $decoder->next;
-        do_stuff( $next );
-    }
-
-Note that the returned structure could be C<undef>, so don't do:
-
-    $decoder->read( $binary );
-
-    # NO! $next could be 'undef'
-    while( my $next = $decoder->next ) {
-        do_stuff( $next );
-    }
-
-=head3 all 
-
-Returns (and flush from the buffer) all the currently available structures.
-
-=cut
 
 
 has buffer => (
@@ -163,19 +68,6 @@ has gen_next => (
 
 );
 
-=head3 read_all( @binaries )
-
-Reads the provided binary data and returns all structured decoded so far.
-
-    
-    @data = $decoder->read_all($binary);
-
-    # equivalent to
-    
-    $decoder->read(@binaries);
-    @data = $decoder->all;
-
-=cut
 
 sub read_all($self,@vals){
     $self->read(@vals);
@@ -387,3 +279,133 @@ sub gen_array($size) {
 
 
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::Decoder - Decode data from a MessagePack stream
+
+=head1 VERSION
+
+version 0.0.1
+
+=head1 SYNOPSIS
+
+    use MsgPack::Decoder;
+
+    use MsgPack::Encoder;
+    use Data::Printer;
+
+    my $decoder = MsgPack::Decoder->new;
+
+    my $msgpack_binary = MsgPack::Encoder->new(struct => [ "hello world" ] )->encoded;
+
+    $decoder->read( $msgpack_binary );
+
+    my $struct = $decode->next;  
+
+    p $struct;    # prints [ 'hello world' ]
+
+=head2 DESCRIPTION
+
+C<MsgPack::Decoder> objects take in the raw binary representation of 
+one or more MessagePack data structures, and convert it back into their
+Perl representations.
+
+=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
+
+I'm implementing the different messagepack types as I go along. So far, the
+current types are supported:
+
+=over
+
+=item Boolean
+
+=item PositiveFixInt
+
+=item NegativeFixInt
+
+=item FixStr
+
+=item Str8
+
+=item FixArray
+
+=item Nil
+
+=item FixMap
+
+=item FixExt1
+
+=back
+
+=head2 METHODS
+
+This class consumes L<MooseX::Role::Loggable>, and inherits all of its
+methods.
+
+=head3 read( @binary_values ) 
+
+Reads in the raw binary to convert. The binary can be only a partial piece of the 
+encoded structures.  If so, all structures that can be decoded will be
+made available in the buffer, while the potentially last unterminated structure will
+remain "in flight".
+
+Returns how many structures were decoded.
+
+=head3 has_buffer
+
+Returns the number of decoded structures currently waiting in the buffer.
+
+=head3 next
+
+Returns the next structure from the buffer.
+
+    $decoder->read( $binary );
+
+    while( $decoder->has_buffer ) {
+        my $next = $decoder->next;
+        do_stuff( $next );
+    }
+
+Note that the returned structure could be C<undef>, so don't do:
+
+    $decoder->read( $binary );
+
+    # NO! $next could be 'undef'
+    while( my $next = $decoder->next ) {
+        do_stuff( $next );
+    }
+
+=head3 all 
+
+Returns (and flush from the buffer) all the currently available structures.
+
+=head3 read_all( @binaries )
+
+Reads the provided binary data and returns all structured decoded so far.
+
+    @data = $decoder->read_all($binary);
+
+    # equivalent to
+    
+    $decoder->read(@binaries);
+    @data = $decoder->all;
+
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

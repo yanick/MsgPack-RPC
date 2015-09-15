@@ -1,73 +1,7 @@
 package MsgPack::Encoder;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: Encode a structure into a MessagePack binary string
-
-=head1 SYNOPSIS
-
-    use MsgPack::Encoder;
-
-    my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
-
-    use MsgPack::Decoder;
-
-    my $struct = MsgPack::Decoder->new->read_all($binary);
-
-=head1 DESCRIPTION
-
-C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
-its MessagePack serialization.
-
-=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
-
-I'm implementing the different messagepack types as I go along. So far, the
-current types are supported:
-
-=over
-
-=item Boolean
-
-=item PositiveFixInt
-
-=item NegativeFixInt
-
-=item FixStr
-
-=item Str8
-
-=item FixArray
-
-=item Nil
-
-=item FixMap
-
-=item FixExt1
-
-=back
-
-=head1 OVERLOADING
-
-=head2 Stringification
-
-The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
-
-
-    print MsgPack::Encoder->new( struct => $foo );
-    
-    # equivalent to
-
-    print MsgPack::Encoder->new( struct => $foo )->encoded;
-
-=head1 METHODS
-
-=head2 new( struct => $perl_struct )
-
-The constructor accepts a single argument, C<struct>, which is the perl structure (or simple scalar)
-to encode.
-
-=head2 encoded
-
-Returns the MessagePack representation of the structure.
-
-=cut
+$MsgPack::Encoder::VERSION = '0.0.1';
 
 use strict;
 use warnings;
@@ -229,4 +163,94 @@ sub encode_fixarray {
 
 1;
 
+__END__
 
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::Encoder - Encode a structure into a MessagePack binary string
+
+=head1 VERSION
+
+version 0.0.1
+
+=head1 SYNOPSIS
+
+    use MsgPack::Encoder;
+
+    my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
+
+    use MsgPack::Decoder;
+
+    my $struct = MsgPack::Decoder->new->read_all($binary);
+
+=head1 DESCRIPTION
+
+C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
+its MessagePack serialization.
+
+=head1 CURRENTLY SUPPORTED MESSAGEPACK TYPES
+
+I'm implementing the different messagepack types as I go along. So far, the
+current types are supported:
+
+=over
+
+=item Boolean
+
+=item PositiveFixInt
+
+=item NegativeFixInt
+
+=item FixStr
+
+=item Str8
+
+=item FixArray
+
+=item Nil
+
+=item FixMap
+
+=item FixExt1
+
+=back
+
+=head1 OVERLOADING
+
+=head2 Stringification
+
+The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
+
+    print MsgPack::Encoder->new( struct => $foo );
+    
+    # equivalent to
+
+    print MsgPack::Encoder->new( struct => $foo )->encoded;
+
+=head1 METHODS
+
+=head2 new( struct => $perl_struct )
+
+The constructor accepts a single argument, C<struct>, which is the perl structure (or simple scalar)
+to encode.
+
+=head2 encoded
+
+Returns the MessagePack representation of the structure.
+
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
