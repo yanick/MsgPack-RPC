@@ -8,6 +8,7 @@ Revision history for MessagePack
   [ DOCUMENTATION ]
 
   [ ENHANCEMENTS ]
+  - Now supports all of MessagePack types!
 
   [ NEW FEATURES ]
 
