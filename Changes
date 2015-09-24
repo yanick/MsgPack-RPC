@@ -1,18 +1,11 @@
 Revision history for MessagePack
 
-{{$NEXT}}
-  [ API CHANGES ]
-
-  [ BUG FIXES ]
-
-  [ DOCUMENTATION ]
-
+0.1.0 2015-09-24
   [ ENHANCEMENTS ]
-  - Now supports all of MessagePack types!
-
-  [ NEW FEATURES ]
+    - Now supports all of MessagePack types!
 
   [ STATISTICS ]
+    - code churn: 4 files changed, 905 insertions(+), 136 deletions(-)
 
 0.0.1 2015-09-14
   - First version, unleashed on an unsuspecting world.
