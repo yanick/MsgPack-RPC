@@ -1,7 +1,0 @@
-^dist.ini
-^MANIFEST.SKIP
-MessagePack.*
-^\.gitignore
-^\.git
-^\.build
-
