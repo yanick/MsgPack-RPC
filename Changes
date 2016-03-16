@@ -4,8 +4,6 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
-  - Tests were failing on perls compiled with -Duselongdouble because of
-    comparison. (GH#4, reported by eserte)
 
   [ DOCUMENTATION ]
 
@@ -14,6 +12,14 @@ Revision history for MessagePack
   [ NEW FEATURES ]
 
   [ STATISTICS ]
+
+0.1.1 2016-03-16
+  [ BUG FIXES ]
+    - Tests were failing on perls compiled with -Duselongdouble because of
+      comparison. (GH#4, reported by eserte)
+
+  [ STATISTICS ]
+    - code churn: 3 files changed, 17 insertions(+), 2 deletions(-)
 
 0.1.0 2015-09-24
   [ ENHANCEMENTS ]
