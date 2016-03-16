@@ -3,6 +3,7 @@ use warnings;
 
 use Test::More tests => 12;
 use Test::Deep;
+use Test::Approx;
 
 use MsgPack::Encoder;
 use MsgPack::Decoder;
@@ -33,7 +34,12 @@ subtest simple_encoding => sub {
 
     while ( my( $name, $struct ) = each %structs ) {
         $decoder->read( MsgPack::Encoder->new(  struct => $struct )->encoded );
-        cmp_deeply $decoder->next => $struct, $name;
+        if ( $name eq 'float32' ) {
+            is_approx( $decoder->next, $struct, $name );
+        }
+        else {
+            cmp_deeply $decoder->next => $struct, $name;
+        }
     }
 };
 
