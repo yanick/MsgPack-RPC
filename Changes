@@ -4,6 +4,8 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
+  - Tests were failing on perls compiled with -Duselongdouble because of
+    comparison. (GH#4, reported by eserte)
 
   [ DOCUMENTATION ]
 
