@@ -43,8 +43,6 @@ use Moose;
 
 use List::AllUtils qw/ reduce first first_index any /;
 
-use List::Gather;
-
 use experimental 'signatures', 'postderef';
 
 with 'MooseX::Role::Loggable' => {
@@ -65,14 +63,13 @@ Returns how many structures were decoded.
 sub read($self,@values) {
     $self->log_debug( [ "raw bytes: %s", \@values ] );
 
-    my @new = gather {
-        $self->gen_next( 
-            reduce {
-                my $g = $a->($b);
-                is_gen($g) or do { take $$g; gen_new_value() }
-            } $self->gen_next => map { ord } map { split '' } @values
-        );
-    };
+    my @new;
+    $self->gen_next( 
+        reduce {
+            my $g = $a->($b);
+            is_gen($g) or do { push @new, $$g; gen_new_value() }
+        } $self->gen_next => map { ord } map { split '' } @values
+    );
 
     $self->add_to_buffer(@new);
 
