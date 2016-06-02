@@ -1,18 +1,11 @@
 Revision history for MessagePack
 
-{{$NEXT}}
-  [ API CHANGES ]
-
+0.1.2 2016-06-02
   [ BUG FIXES ]
-  - List::Gather was not playing well with threads.
-
-  [ DOCUMENTATION ]
-
-  [ ENHANCEMENTS ]
-
-  [ NEW FEATURES ]
+    - List::Gather was not playing well with threads.
 
   [ STATISTICS ]
+    - code churn: 2 files changed, 16 insertions(+), 12 deletions(-)
 
 0.1.1 2016-03-16
   [ BUG FIXES ]
