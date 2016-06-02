@@ -4,6 +4,7 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
+  - List::Gather was not playing well with threads.
 
   [ DOCUMENTATION ]
 
