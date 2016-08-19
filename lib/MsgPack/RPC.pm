@@ -128,13 +128,15 @@ use strict;
 use warnings;
 
 use Moose;
+
 use IO::Socket::INET;
 use IO::Socket::UNIX;
 use MsgPack::Decoder;
 use MsgPack::Encoder;
 use MsgPack::RPC::Message;
 use MsgPack::RPC::Message::Request;
-use Future;
+
+use Promises qw/ deferred /;
 
 use experimental 'signatures';
 
@@ -225,13 +227,13 @@ has "response_callbacks" => (
 
 sub add_response_callback {
     my( $self, $id ) = @_;
-    my $future = Future->new;
+    my $deferred = deferred;
     $self->response_callbacks->{$id} = {
         timestamp => time,
-        future => $future,
+        deferred => $deferred,
     };
 
-    $future;
+    $deferred;
 }
 
 sub request($self,$method,$args=[],$id=++$MsgPack::RPC::MSG_ID) {
@@ -307,6 +309,9 @@ sub loop {
                 }
                 elsif( eval { $until->isa('Future') } ) {
                     return if $until->is_done;
+                }
+                elsif( eval { $until->can('is_in_progress') } ) {
+                    return unless $until->is_in_progress;
                 }
                 else {
                     return if $until and not --$until;
