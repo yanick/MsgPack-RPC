@@ -1,5 +1,55 @@
 package MsgPack::RPC::Message::Request;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: a MessagePack-RPC request
+$MsgPack::RPC::Message::Request::VERSION = '1.0.0';
+
+use strict;
+use warnings;
+
+use Moose;
+
+use Promises qw/ deferred /;
+
+extends 'MsgPack::RPC::Message';
+
+has message_id => (
+    is => 'ro',
+);
+
+has response => (
+    is => 'ro',
+    default => sub {
+        my $self = shift;
+        my $deferred = deferred;
+
+        $deferred->then(
+            sub{ $self->emitter->response($self->message_id,shift) },
+            sub{ $self->emitter->response_error($self->message_id,shift) },
+        );
+
+        $deferred;
+    },
+    handles => {
+        resp  => 'resolve',
+        error => 'reject',
+    }
+);
+
+1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::RPC::Message::Request - a MessagePack-RPC request
+
+=head1 VERSION
+
+version 1.0.0
 
 =head1 SYNOPSIS
 
@@ -41,38 +91,15 @@ Shortcut for
 
     $request->response->reject($args)
 
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
-
-use strict;
-use warnings;
-
-use Moose;
-
-use Promises qw/ deferred /;
-
-extends 'MsgPack::RPC::Message';
-
-has message_id => (
-    is => 'ro',
-);
-
-has response => (
-    is => 'ro',
-    default => sub {
-        my $self = shift;
-        my $deferred = deferred;
-
-        $deferred->then(
-            sub{ $self->emitter->response($self->message_id,shift) },
-            sub{ $self->emitter->response_error($self->message_id,shift) },
-        );
-
-        $deferred;
-    },
-    handles => {
-        resp  => 'resolve',
-        error => 'reject',
-    }
-);
-
-1;
