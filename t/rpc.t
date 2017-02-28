@@ -53,7 +53,7 @@ pass "okay";
 
 subtest 'request -> reply' => sub {
     $rpc->subscribe( myrequest => sub ($msg) {
-        $msg->response->done( 'okay' );
+        $msg->resp( 'okay' );
     });
 
     print $io_in MsgPack::Encoder->new( struct => [
