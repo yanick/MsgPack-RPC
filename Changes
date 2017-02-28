@@ -2,6 +2,7 @@ Revision history for MessagePack
 
 {{$NEXT}}
   [ API CHANGES ]
+  - Switching from Future to Promises.
 
   [ BUG FIXES ]
 

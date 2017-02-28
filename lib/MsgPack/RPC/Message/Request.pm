@@ -22,24 +22,24 @@ the id of the request.
 
 =head2 response
 
-Returns a L<Future> that, once fulfilled, will send a response back with the provided arguments.
+Returns a L<Promises::Deferred> that, once fulfilled, sends the response back with the provided arguments.
 
     $rpc->subscribe( something => sub {
         my $request = shift;
-        $request->response->done('a-okay');
+        $request->response->resolve('a-okay');
     });
 
-=head2 done($args)
+=head2 resp($args)
 
 Shortcut for
 
-    $request->response->done($args)
+    $request->response->resolve($args)
 
-=head2 fail($args)
+=head2 error($args)
 
 Shortcut for
 
-    $request->response->fail($args)
+    $request->response->reject($args)
 
 =cut
 
@@ -48,7 +48,7 @@ use warnings;
 
 use Moose;
 
-use Future;
+use Promises qw/ deferred /;
 
 extends 'MsgPack::RPC::Message';
 
@@ -60,18 +60,19 @@ has response => (
     is => 'ro',
     default => sub {
         my $self = shift;
-        my $future = Future->new;
+        my $deferred = deferred;
 
-        $future->on_done(sub{
-            $self->emitter->response($self->message_id,shift);
-        });
-        $future->on_fail(sub{
-            $self->emitter->response_error($self->message_id,shift);
-        });
+        $deferred->then(
+            sub{ $self->emitter->response($self->message_id,shift) },
+            sub{ $self->emitter->response_error($self->message_id,shift) },
+        );
 
-        $future;
+        $deferred;
     },
-    handles => [ qw/ done fail / ],
+    handles => {
+        resp  => 'resolve',
+        error => 'reject',
+    }
 );
 
 1;

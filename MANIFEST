@@ -6,7 +6,6 @@ MANIFEST
 META.json
 META.yml
 Makefile.PL
-README
 README.mkdn
 SIGNATURE
 cpanfile
@@ -24,5 +23,4 @@ t/00-report-prereqs.t
 t/encode.t
 t/encoding-decoding.t
 t/rpc.t
-xt/release/pause-permissions.t
 xt/release/unused-vars.t

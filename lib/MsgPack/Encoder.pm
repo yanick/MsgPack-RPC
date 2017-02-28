@@ -247,13 +247,13 @@ my $Str32 = Type::Tiny->new(
 my $Str16 = Type::Tiny->new(
     parent => $Str32,
     name => 'Str16',
-    constaints => sub { length $_ < 2**16 }
+    constraint => sub { length $_ < 2**16 }
 );
 
 my $Str8 = Type::Tiny->new(
     parent => $Str16,
     name => 'Str8',
-    constaints => sub { length $_ < 2**8 }
+    constraint => sub { length $_ < 2**8 }
 );
 
 my $FixStr = Type::Tiny->new(
@@ -276,7 +276,7 @@ my $Array16 = Type::Tiny->new(
 my $FixArray = Type::Tiny->new(
     parent => ArrayRef,
     name => 'FixArray',
-    constraint => sub { @$_ < 31 },
+    constraint => sub { @$_ < 16 },
 );
 
 my $Nil = Type::Tiny->new(
