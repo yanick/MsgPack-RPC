@@ -2,7 +2,6 @@ Revision history for MessagePack
 
 {{$NEXT}}
   [ API CHANGES ]
-  - Switching from Future to Promises.
 
   [ BUG FIXES ]
 
@@ -13,6 +12,13 @@ Revision history for MessagePack
   [ NEW FEATURES ]
 
   [ STATISTICS ]
+
+1.0.0 2017-02-28
+  [ API CHANGES ]
+    - Switching from Future to Promises.
+
+  [ STATISTICS ]
+    - code churn: 7 files changed, 52 insertions(+), 32 deletions(-)
 
 0.1.2 2016-06-02
   [ BUG FIXES ]
