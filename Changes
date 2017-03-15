@@ -4,7 +4,6 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
-  - Empty strings were failing.
 
   [ DOCUMENTATION ]
 
@@ -13,6 +12,13 @@ Revision history for MessagePack
   [ NEW FEATURES ]
 
   [ STATISTICS ]
+
+1.0.1 2017-03-15
+  [ BUG FIXES ]
+    - Empty strings were failing.
+
+  [ STATISTICS ]
+    - code churn: 6 files changed, 34 insertions(+), 5 deletions(-)
 
 1.0.0 2017-02-28
   [ API CHANGES ]
