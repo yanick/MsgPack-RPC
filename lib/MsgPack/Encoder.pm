@@ -129,7 +129,7 @@ use experimental 'postderef', 'signatures';
 
 use overload '""' => \&encoded;
 
-use Types::Standard qw/ Str ArrayRef Ref Int Any InstanceOf Undef HashRef Num /;
+use Types::Standard qw/ Str ArrayRef Ref Int Any InstanceOf Undef HashRef Num StrictNum /;
 use Type::Tiny;
 
 use MsgPack::Type::Ext;
@@ -349,7 +349,7 @@ my $Ext32 = Type::Tiny->new(
 );
 
 my $Float64 = Type::Tiny->new(
-    parent => Num,
+    parent => StrictNum,
     name => 'Float64',
 );
 

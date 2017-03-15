@@ -491,6 +491,8 @@ sub gen_fixstr {
 }
 
 sub gen_str($size) {
+    return \'' unless $size;
+
     my $gen = read_n_bytes($size);
     sub($byte) {
         $gen = $gen->($byte);

@@ -4,6 +4,7 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
+  - Empty strings were failing.
 
   [ DOCUMENTATION ]
 

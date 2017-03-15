@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 4;
+use Test::More tests => 5;
 use Test::Deep;
 
 use MsgPack::Encoder;
@@ -26,8 +26,10 @@ cmp_encode [ (1)x18 ] => [
     0xdc, 0x00, 0x12, ( 0x01 ) x 18
 ], "array of 18 elements";
 
-
 cmp_encode 'a' x 300 => [
     0xda, 1, 0x2c, ( ord 'a' ) x 300
 ], '300 char string';
+
+cmp_encode '    25' => [ 0xa6, 0x20, 0x20, 0x20, 0x20, 0x32, 0x35 ],
+    'string that looks like a number';
 

@@ -6,6 +6,7 @@ MANIFEST
 META.json
 META.yml
 Makefile.PL
+README
 README.mkdn
 SIGNATURE
 cpanfile
@@ -20,7 +21,9 @@ lib/MsgPack/Type/Ext.pm
 t/00-compile.t
 t/00-report-prereqs.dd
 t/00-report-prereqs.t
+t/decode.t
 t/encode.t
 t/encoding-decoding.t
 t/rpc.t
+xt/release/pause-permissions.t
 xt/release/unused-vars.t
