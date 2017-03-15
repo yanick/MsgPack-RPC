@@ -1,128 +1,7 @@
 package MsgPack::RPC;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: MessagePack RPC client
-
-=head1 SYNOPSIS
-
-    use MsgPack::RPC;
-
-    my $rpc = MsgPack::RPC->new( io => '127.0.0.1:6666' );
-
-    $rpc->notify( 'something' => [ 'with', 'args' ] );
-
-    $rpc->request( 
-        request_method => [ 'some', 'args' ] 
-    )->on_done(sub{
-        my $resp = @_;
-
-        print "replied with: ", @_;
-    });
-
-    $rpc->loop;
-
-=head1 DESCRIPTION
-
-C<MsgPack::RPC> implements a MessagePack RPC client following
-the protocol described at L<https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md>.
-
-
-=head1 METHODS
-
-C<MsgPack::RPC> consumes the role L<MooseX::Role::Loggable>, and thus has all its
-exported methods.
-
-
-=head2 new( %args )
-
-The class constructor takes all the arguments for L<MooseX::Role::Loggable>, plus the following:
-
-=over
-
-=item io( [ $in_fh, $out_fh ] )
-
-=item io( $socket )
-
-Required. Defines which IO on which the MessagePack messages will be received and sent.
-
-The IO can be a local socket (e.g., C</tmp/rpc.socket> ), a network socket (e.g., C<127.0.0.1:6543>),
-or a pair of filehandles.
-
-
-=back
-
-=head2 io()
-
-Returns the IO descriptor(s) used by the object.
-
-=head2 request( $method, $args, $id )
-
-Sends the request. The C<$id> is optional, and will be automatically
-assigned from an internal self-incrementing list if not given.
-
-Returns a promise that will be fulfilled once a response is received. The response can be either a success 
-or a failure, and in both case the fulfilled promise will be given whatever values are passed in the response.
-
-    $rpc->request( 'ls', [ '/home', '/tmp' ] )
-        ->on_done(sub{ say for @_ })
-        ->on_fail(sub{ die "couldn't read directories: ", @_ });
-
-
-=head2 notify( $method, $args )
-
-Sends a notification. 
-
-=head2 subscribe( $event_name, \&callback ) 
-
-    # 'ping' is a request
-    $rpc->subscribe( ping => sub($msg) {
-        $msg->response->done('pong');
-    });
-
-    # 'log' is a notification
-    $rpc->subscribe( log => sub($msg) {
-        print {$fh} @{$msg->args};
-    });
-
-
-Register a callback for the given event. If a notification or a request matching the
-is received, the callback will be called. The callback will be passed either a L<MsgPack::RPC::Message> (if triggered by
-a notification) or
-L<MsgPack::RPC::Message::Request> object.
-
-Events can have any number of callbacks assigned to them. 
-
-The subscription system is implemented using the L<Beam::Emitter> role.
-
-=head2 loop( $end_condition )
-
-Reads and process messages from the incoming stream, endlessly if not be given an optional C<$end_condition>.
-The end condition can be given a number of messages to read, or a promise that will end the loop once 
-fulfilled.
-
-    # loop until we get a response from our request
-
-    my $response = $rpc->request('add', [1,2] );
-
-    $response->on_done(sub{ print "sum is ", @_ });
-
-    $rpc->loop($response);
-
-
-    # loop 100 times
-    $rpc->loop(100);
-
-
-=head1 SEE ALSO
-
-=over
-
-=item L<MsgPack::RPC::Message>
-
-=item L<MsgPack::RPC::Message::Request>
-
-=back
-
-
-=cut
+$MsgPack::RPC::VERSION = '1.0.1';
 
 use strict;
 use warnings;
@@ -325,5 +204,143 @@ sub loop {
 
 1;
 
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::RPC - MessagePack RPC client
+
+=head1 VERSION
+
+version 1.0.1
+
+=head1 SYNOPSIS
+
+    use MsgPack::RPC;
+
+    my $rpc = MsgPack::RPC->new( io => '127.0.0.1:6666' );
+
+    $rpc->notify( 'something' => [ 'with', 'args' ] );
+
+    $rpc->request( 
+        request_method => [ 'some', 'args' ] 
+    )->on_done(sub{
+        my $resp = @_;
+
+        print "replied with: ", @_;
+    });
+
+    $rpc->loop;
+
+=head1 DESCRIPTION
+
+C<MsgPack::RPC> implements a MessagePack RPC client following
+the protocol described at L<https://github.com/msgpack-rpc/msgpack-rpc/blob/master/spec.md>.
+
+=head1 METHODS
+
+C<MsgPack::RPC> consumes the role L<MooseX::Role::Loggable>, and thus has all its
+exported methods.
+
+=head2 new( %args )
+
+The class constructor takes all the arguments for L<MooseX::Role::Loggable>, plus the following:
+
+=over
+
+=item io( [ $in_fh, $out_fh ] )
+
+=item io( $socket )
+
+Required. Defines which IO on which the MessagePack messages will be received and sent.
+
+The IO can be a local socket (e.g., C</tmp/rpc.socket> ), a network socket (e.g., C<127.0.0.1:6543>),
+or a pair of filehandles.
+
+=back
+
+=head2 io()
+
+Returns the IO descriptor(s) used by the object.
+
+=head2 request( $method, $args, $id )
+
+Sends the request. The C<$id> is optional, and will be automatically
+assigned from an internal self-incrementing list if not given.
+
+Returns a promise that will be fulfilled once a response is received. The response can be either a success 
+or a failure, and in both case the fulfilled promise will be given whatever values are passed in the response.
+
+    $rpc->request( 'ls', [ '/home', '/tmp' ] )
+        ->on_done(sub{ say for @_ })
+        ->on_fail(sub{ die "couldn't read directories: ", @_ });
+
+=head2 notify( $method, $args )
+
+Sends a notification. 
+
+=head2 subscribe( $event_name, \&callback ) 
+
+    # 'ping' is a request
+    $rpc->subscribe( ping => sub($msg) {
+        $msg->response->done('pong');
+    });
+
+    # 'log' is a notification
+    $rpc->subscribe( log => sub($msg) {
+        print {$fh} @{$msg->args};
+    });
+
+Register a callback for the given event. If a notification or a request matching the
+is received, the callback will be called. The callback will be passed either a L<MsgPack::RPC::Message> (if triggered by
+a notification) or
+L<MsgPack::RPC::Message::Request> object.
+
+Events can have any number of callbacks assigned to them. 
+
+The subscription system is implemented using the L<Beam::Emitter> role.
+
+=head2 loop( $end_condition )
+
+Reads and process messages from the incoming stream, endlessly if not be given an optional C<$end_condition>.
+The end condition can be given a number of messages to read, or a promise that will end the loop once 
+fulfilled.
+
+    # loop until we get a response from our request
+
+    my $response = $rpc->request('add', [1,2] );
+
+    $response->on_done(sub{ print "sum is ", @_ });
+
+    $rpc->loop($response);
 
 
+    # loop 100 times
+    $rpc->loop(100);
+
+=head1 SEE ALSO
+
+=over
+
+=item L<MsgPack::RPC::Message>
+
+=item L<MsgPack::RPC::Message::Request>
+
+=back
+
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
