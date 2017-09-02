@@ -27,15 +27,14 @@ Perl representations.
 
 =head2 METHODS
 
-This class consumes L<MooseX::Role::Loggable>, and inherits all of its
-methods.
-
 =cut
 
 use 5.20.0;
 
 use strict;
 use warnings;
+
+use Carp;
 
 use MsgPack::Type::Boolean;
 
@@ -45,9 +44,15 @@ use List::AllUtils qw/ reduce first first_index any /;
 
 use experimental 'signatures', 'postderef';
 
-with 'MooseX::Role::Loggable' => {
-    -excludes => [ 'Bool' ],
-};
+use Log::Any;
+has log => (
+    is => 'ro',
+    lazy =>1,
+    default => sub { 
+    Log::Any->get_logger->clone( prefix => "[MsgPack::Decoder] ");
+});
+
+use MsgPack::Decoder::Generator::Any;
 
 =head3 read( @binary_values ) 
 
@@ -61,8 +66,6 @@ Returns how many structures were decoded.
 =cut
 
 sub read($self,@values) {
-    $self->log_debug( [ "raw bytes: %s", \@values ] );
-
     my @new;
     $self->gen_next( 
         reduce {
@@ -168,7 +171,7 @@ If there is no data in the buffer, dies.
 
 sub read_next($self,@vals){
     $self->read(@vals);
-    die "buffer is empty" unless $self->has_buffer;
+    carp "buffer is empty" unless $self->has_buffer;
     $self->next;
 }
 

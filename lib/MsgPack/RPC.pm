@@ -12,8 +12,6 @@ package MsgPack::RPC;
     $rpc->request( 
         request_method => [ 'some', 'args' ] 
     )->on_done(sub{
-        my $resp = @_;
-
         print "replied with: ", @_;
     });
 
@@ -27,13 +25,7 @@ the protocol described at L<https://github.com/msgpack-rpc/msgpack-rpc/blob/mast
 
 =head1 METHODS
 
-C<MsgPack::RPC> consumes the role L<MooseX::Role::Loggable>, and thus has all its
-exported methods.
-
-
 =head2 new( %args )
-
-The class constructor takes all the arguments for L<MooseX::Role::Loggable>, plus the following:
 
 =over
 
@@ -84,6 +76,7 @@ Sends a notification.
 
 
 Register a callback for the given event. If a notification or a request matching the
+event
 is received, the callback will be called. The callback will be passed either a L<MsgPack::RPC::Message> (if triggered by
 a notification) or
 L<MsgPack::RPC::Message::Request> object.
@@ -141,9 +134,6 @@ use Promises qw/ deferred /;
 use experimental 'signatures';
 
 with 'Beam::Emitter';
-with 'MooseX::Role::Loggable' => {
-    -excludes => [ 'Bool' ],
-};
 
 has io => (
     required => 1,
@@ -211,9 +201,7 @@ has decoder => (
     is => 'ro',
     lazy => 1,
     default => sub {
-        MsgPack::Decoder->new(
-            logger => $_[0]->logger
-        );
+        MsgPack::Decoder->new;
     },
 );
 
@@ -254,22 +242,17 @@ sub notify($self,$method,$args=[]) {
 }
 
 sub send($self,$struct) {
-    $self->log( [ "sending %s", $struct] );
-
     my $encoded = MsgPack::Encoder->new(struct => $struct)->encoded;
 
-    $self->log_debug( [ "encoded: %s", $encoded ] );
     $self->_io_write->($encoded);
 }
 
 sub emit_request($self,$id,$method,$args) {
-    $self->log_debug( [ "received a '%s(%s)' request", $method,$args ] );
     $self->emit( $method, class => 'MsgPack::RPC::Message::Request', 
         args => $args, message_id => $id );     
 }
 
 sub emit_notification($self,$method,$args) {
-    $self->log_debug( [ "it's a '%s' notification", $method ] );
     $self->emit( $method, class => 'MsgPack::RPC::Message', args => $args );     
 }
 
@@ -284,10 +267,8 @@ sub loop {
 
         while( $self->decoder->has_buffer ) {
             my $next = $self->decoder->next;
-            $self->log( [ "receiving %s" , $next ]);
 
             if ( $next->[0] == 1 ) {
-                $self->log_debug( [ "it's a response for %d", $next->[1] ] );
                 if( my $callback =  $self->response_callbacks->{$next->[1]} ) {
                     my $f = $callback->{deferred};
                     $next->[2] 
