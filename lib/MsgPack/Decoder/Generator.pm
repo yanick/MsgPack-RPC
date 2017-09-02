@@ -1,0 +1,114 @@
+package MsgPack::Decoder::Generator;
+
+use 5.10.0;
+
+use strict;
+use warnings;
+
+use List::Util qw/ reduce /;
+use Module::Runtime qw/ use_module /;
+
+use Log::Any;
+
+use Moose;
+
+use MooseX::MungeHas 'is_ro';
+
+use experimental 'signatures', 'postderef';
+
+has log => sub { 
+    my $class = ref shift;
+    $class =~ s/MsgPack::Decoder::Generator:://;
+    Log::Any->get_logger->clone( prefix => "[$class] ");
+};
+
+has bytes => (
+    required => 1,
+);
+
+has buffer => (
+    traits => [ 'String' ],
+    is => 'rw',
+    default => '',
+    handles => {
+        append_buffer => 'append',
+        buffer_size   => 'length',
+    },
+    trigger => sub {
+        my ( $self, $buffer ) = @_;
+
+        return unless $self->can( 'gen_value' );
+
+        return if length($buffer) < $self->bytes;
+
+        $self->push_decoded->( $self->gen_value );
+    },
+);
+
+has next => (
+    is => 'ro',
+    lazy => 1,
+    builder => \&build_next,
+    traits => [ 'Array' ],
+    handles => {
+        next_args => 'shift',
+        push_next => 'push',
+    },
+);
+
+sub build_next { [] }
+
+sub BUILD { $_[0]->log->debug('generator created') }
+
+sub buffer_as_int {
+    my $self = shift;
+    
+    return reduce { ( $a << 8 ) + $b } map { ord } split '', $self->buffer;
+}
+
+has post_next => (
+    is => 'ro',
+    lazy => 1,
+    default => sub { [] },
+    traits => [ 'Array' ],
+    handles => {
+        next_post_next => 'shift',
+    },
+);
+
+has push_decoded => sub {
+    return sub { };
+};
+
+sub next_read($self,$data) {
+    my $arg = $self->next_args || $self->next_post_next || [ 'Any' ];
+
+    my( $class, @args ) = @$arg;
+
+    $class = 'MsgPack::Decoder::Generator::' . $class;
+    my $x = use_module($class)->new( 
+        push_decoded => $self->push_decoded, 
+        post_next    => [ $self->next->@*, $self->post_next->@* ],
+        @args 
+    );
+
+    $x->read($data);
+}
+
+
+sub read ( $self, $data ) {
+    my $left_to_read = $self->bytes - $self->buffer_size;
+
+    if ( $left_to_read > 0 ) {
+        my $mine = substr $data, 0, $left_to_read, '';
+        $self->log->trace( 'reading: ' . join ' ', map { sprintf "%#x", ord } split '', $mine );
+        $self->append_buffer($mine);
+        $left_to_read -= length $mine;
+    }
+
+    return $left_to_read? $self : $self->next_read($data);
+}
+
+__PACKAGE__->meta->make_immutable;
+
+1;
