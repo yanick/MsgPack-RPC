@@ -71,7 +71,7 @@ Constructor. Accepts the following arguments.
 
 If sets to C<true>, incoming decoded data is immediately removed 
 from the buffer and broadcasted
-via a C<decoded> event encapsulated in a L<MsgPack::Decoder::Event> object. 
+via a C<decoded> event encapsulated in a L<MsgPack::Decoder::Event::Decoded> object. 
 
 C<MsgPack::Decoder> consumes the L<Beam::Emitter> role and subscription/unsubscription
 to the C<decoded> event is done via its methods.
@@ -176,12 +176,12 @@ after add_to_buffer => sub {
 
     return unless $self->emitter;
 
-    require MsgPack::Decoder::Event;
+    require MsgPack::Decoder::Event::Decoded;
     
     my @elements = $self->all;
     $self->clear_buffer;
 
-    $self->emit( 'decoded', class => 'MsgPack::Decoder::Event', payload => \@elements );
+    $self->emit( 'decoded', class => 'MsgPack::Decoder::Event::Decoded', payload => \@elements );
 };
 
 after all => sub($self) {
