@@ -29,9 +29,9 @@ the protocol described at L<https://github.com/msgpack-rpc/msgpack-rpc/blob/mast
 
 =over
 
-=item io( [ $in_fh, $out_fh ] )
-
 =item io( $socket )
+
+=item io( [ $in_fh, $out_fh ] )
 
 Required. Defines which IO on which the MessagePack messages will be received and sent.
 
