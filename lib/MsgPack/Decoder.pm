@@ -25,8 +25,6 @@ C<MsgPack::Decoder> objects take in the raw binary representation of
 one or more MessagePack data structures, and convert it back into their
 Perl representations.
 
-=head2 METHODS
-
 =cut
 
 use 5.20.0;
@@ -36,15 +34,19 @@ use warnings;
 
 use Carp;
 
+use List::AllUtils qw/ reduce first first_index any /;
+
 use MsgPack::Type::Boolean;
+use MsgPack::Decoder::Generator::Any;
+
+use Log::Any;
 
 use Moose;
 
-use List::AllUtils qw/ reduce first first_index any /;
+with 'Beam::Emitter';
 
 use experimental 'signatures', 'postderef';
 
-use Log::Any;
 has log => (
     is => 'ro',
     lazy =>1,
@@ -52,7 +54,36 @@ has log => (
     Log::Any->get_logger->clone( prefix => "[MsgPack::Decoder] ");
 });
 
-use MsgPack::Decoder::Generator::Any;
+has emitter => (
+    is => 'ro',
+    default => sub { 0 },
+);
+
+=head2 METHODS
+
+=head3 new( %args )
+
+Constructor. Accepts the following arguments.
+
+=over
+
+=item emitter
+
+If sets to C<true>, incoming decoded data is immediately removed 
+from the buffer and broadcasted
+via a C<decoded> event encapsulated in a L<MsgPack::Decoder::Event> object. 
+
+C<MsgPack::Decoder> consumes the L<Beam::Emitter> role and subscription/unsubscription
+to the C<decoded> event is done via its methods.
+
+    my $decoder = MsgPack::Decoder->new( emitter => 1 );
+    $decoder->on( 'decoded' => sub {
+        my $event = shift;
+        my @structs = $event->payload_list;
+        warn "we received ", scalar(@structs), " data structures";
+    });
+
+=back
 
 =head3 read( @binary_values ) 
 
@@ -127,6 +158,7 @@ has buffer => (
     handles => {
         'has_buffer' => 'count',
         'buffer_size' => 'count',
+        clear_buffer => 'clear',
         next => 'shift',
         all => 'elements',
         add_to_buffer => 'push',
@@ -136,6 +168,20 @@ has buffer => (
 after add_to_buffer => sub {
     my ( $self, @values ) = @_;
     $self->log->debugf( 'pushing to buffer: %s', \@values );
+};
+
+# add the 'after' only if emitter is set to 1? for performance
+after add_to_buffer => sub {
+    my $self = shift;
+
+    return unless $self->emitter;
+
+    require MsgPack::Decoder::Event;
+    
+    my @elements = $self->all;
+    $self->clear_buffer;
+
+    $self->emit( 'decoded', class => 'MsgPack::Decoder::Event', payload => \@elements );
 };
 
 after all => sub($self) {
