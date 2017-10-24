@@ -32,16 +32,10 @@ holding the arguments of the notification itself.
 =cut
 
 use Moose;
-extends 'Beam::Event';
 
-has args => (
-   traits => [ 'Array' ],
-   is => 'ro',
-   default => sub { [] },
-   handles => {
-      all_args => 'elements',
-   },
-);
+sub is_response     { 0 }
+sub is_request      { 0 }
+sub is_notification { 0 }
 
 
 1;

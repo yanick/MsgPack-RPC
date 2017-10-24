@@ -1,4 +1,4 @@
-package MsgPack::RPC::Message::Request;
+package MsgPack::RPC::Message::Notification;
 # ABSTRACT: a MessagePack-RPC request
 
 =head1 SYNOPSIS
@@ -46,49 +46,30 @@ Shortcut for
 use strict;
 use warnings;
 
-use MsgPack::RPC::Message::Response;
-
 use Moose;
 use MooseX::MungeHas 'is_ro';
 
-extends 'MsgPack::RPC::Message::Notification';
+extends 'MsgPack::RPC::Message';
 
 use Promises qw/ deferred /;
 
-my $ID = 0;
-
-has id => (
-    is => 'ro',
-    isa => 'Int',
-    lazy => 1,
-    default => sub { ++$ID },
+has method => (
+    required => 1,
 );
 
-sub response {
-    my $self = shift;
-    
-    MsgPack::RPC::Message::Response->new(
-        id => $self->id,
-        result => shift,
-    );
-}
-
-sub response_error {
-    my $self = shift;
-    
-    MsgPack::RPC::Message::Response->new(
-        id => $self->id,
-        error => shift,
-    );
-}
-
-sub is_request { 1}
-sub is_notification { 0}
+has params => (
+    lazy => 1,
+    default => sub { [] },
+    traits => [ 'Array' ],
+    handles => { all_params => 'elements' },
+);
 
 sub pack {
     my $self = shift;
     
-    return [ 0, $self->id, $self->method, $self->params ];
+    return [ 2, $self->method, $self->params ];
 }
+
+sub is_notification { 1}
 
 1;
