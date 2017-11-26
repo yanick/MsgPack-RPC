@@ -130,10 +130,13 @@ use MsgPack::Encoder;
 use MsgPack::RPC::Message;
 use MsgPack::RPC::Message::Request;
 use MsgPack::RPC::Event::Write;
+use MsgPack::RPC::Message::Response;
+use MsgPack::RPC::Message::Notification;
+use MsgPack::RPC::Event::Receive;
 
-use Promises qw/ deferred /;
+use Scalar::Util qw/ blessed /;
 
-use experimental 'signatures';
+use experimental 'signatures', 'switch';
 
 with 'Beam::Emitter';
 
@@ -272,12 +275,6 @@ has decoder => (
     handles => [ 'read' ],
 );
 
-use experimental 'switch';
-use MsgPack::RPC::Message::Request;
-use MsgPack::RPC::Message::Response;
-use MsgPack::RPC::Message::Notification;
-use MsgPack::RPC::Event::Receive;
-
 sub receive ( $self, $message ) {
     my @message = @$message;
 
@@ -379,7 +376,6 @@ sub send_notification ($self,$method,$args=[]) {
     ));
 }
 
-use Scalar::Util qw/ blessed /;
 
 sub send($self,$struct) {
     my $type = blessed $struct ? 'message' : 'payload';

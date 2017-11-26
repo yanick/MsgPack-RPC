@@ -11,6 +11,7 @@ SIGNATURE
 cpanfile
 doap.xml
 lib/MsgPack/Decoder.pm
+lib/MsgPack/Decoder/Event/Decoded.pm
 lib/MsgPack/Decoder/Generator.pm
 lib/MsgPack/Decoder/Generator/Any.pm
 lib/MsgPack/Decoder/Generator/Array.pm
@@ -24,12 +25,15 @@ lib/MsgPack/Decoder/Generator/Nil.pm
 lib/MsgPack/Decoder/Generator/Noop.pm
 lib/MsgPack/Decoder/Generator/Size.pm
 lib/MsgPack/Decoder/Generator/Str.pm
-lib/MsgPack/Decoder/Generator/String.pm
 lib/MsgPack/Decoder/Generator/UInt.pm
 lib/MsgPack/Encoder.pm
 lib/MsgPack/RPC.pm
+lib/MsgPack/RPC/Event/Receive.pm
+lib/MsgPack/RPC/Event/Write.pm
 lib/MsgPack/RPC/Message.pm
+lib/MsgPack/RPC/Message/Notification.pm
 lib/MsgPack/RPC/Message/Request.pm
+lib/MsgPack/RPC/Message/Response.pm
 lib/MsgPack/Type/Boolean.pm
 lib/MsgPack/Type/Ext.pm
 t/00-compile.t
@@ -38,5 +42,6 @@ t/00-report-prereqs.t
 t/decode.t
 t/encode.t
 t/encoding-decoding.t
+t/garbage_collect_responses.t
 t/rpc.t
 xt/release/unused-vars.t
