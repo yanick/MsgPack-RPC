@@ -1,31 +1,7 @@
 package MsgPack::Decoder;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: Decode data from a MessagePack stream
-
-=head1 SYNOPSIS
-
-    use MsgPack::Decoder;
-
-    use MsgPack::Encoder;
-    use Data::Printer;
-
-    my $decoder = MsgPack::Decoder->new;
-
-    my $msgpack_binary = MsgPack::Encoder->new(struct => [ "hello world" ] )->encoded;
-
-    $decoder->read( $msgpack_binary );
-
-    my $struct = $decode->next;  
-
-    p $struct;    # prints [ 'hello world' ]
-
-    
-=head2 DESCRIPTION
-
-C<MsgPack::Decoder> objects take in the raw binary representation of 
-one or more MessagePack data structures, and convert it back into their
-Perl representations.
-
-=cut
+$MsgPack::Decoder::VERSION = '2.0.0';
 
 use 5.20.0;
 
@@ -59,42 +35,6 @@ has emitter => (
     default => sub { 0 },
 );
 
-=head2 METHODS
-
-=head3 new( %args )
-
-Constructor. Accepts the following arguments.
-
-=over
-
-=item emitter
-
-If sets to C<true>, incoming decoded data is immediately removed 
-from the buffer and broadcasted
-via a C<decoded> event encapsulated in a L<MsgPack::Decoder::Event::Decoded> object. 
-
-C<MsgPack::Decoder> consumes the L<Beam::Emitter> role and subscription/unsubscription
-to the C<decoded> event is done via its methods.
-
-    my $decoder = MsgPack::Decoder->new( emitter => 1 );
-    $decoder->on( 'decoded' => sub {
-        my $event = shift;
-        my @structs = $event->payload_list;
-        warn "we received ", scalar(@structs), " data structures";
-    });
-
-=back
-
-=head3 read( @binary_values ) 
-
-Reads in the raw binary to convert. The binary can be only a partial piece of the 
-encoded structures.  If so, all structures that can be decoded will be
-made available in the buffer, while the potentially last unterminated structure will
-remain "in flight".
-
-Returns how many structures were decoded.
-
-=cut
 
 has generator => (
     is => 'rw',
@@ -120,35 +60,6 @@ sub read($self,@values) {
 }
 
 
-=head3 has_buffer
-
-Returns the number of decoded structures currently waiting in the buffer.
-
-=head3 next
-
-Returns the next structure from the buffer.
-
-    $decoder->read( $binary );
-
-    while( $decoder->has_buffer ) {
-        my $next = $decoder->next;
-        do_stuff( $next );
-    }
-
-Note that the returned structure could be C<undef>, so don't do:
-
-    $decoder->read( $binary );
-
-    # NO! $next could be 'undef'
-    while( my $next = $decoder->next ) {
-        do_stuff( $next );
-    }
-
-=head3 all 
-
-Returns (and flush from the buffer) all the currently available structures.
-
-=cut
 
 
 has buffer => (
@@ -188,24 +99,131 @@ after all => sub($self) {
     $self->buffer([]);
 };
 
+
+sub read_all($self,@vals){
+    $self->read(@vals);
+    $self->all;
+}
+
+
+sub read_next($self,@vals){
+    $self->read(@vals);
+    carp "buffer is empty" unless $self->has_buffer;
+    $self->next;
+}
+
+1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::Decoder - Decode data from a MessagePack stream
+
+=head1 VERSION
+
+version 2.0.0
+
+=head1 SYNOPSIS
+
+    use MsgPack::Decoder;
+
+    use MsgPack::Encoder;
+    use Data::Printer;
+
+    my $decoder = MsgPack::Decoder->new;
+
+    my $msgpack_binary = MsgPack::Encoder->new(struct => [ "hello world" ] )->encoded;
+
+    $decoder->read( $msgpack_binary );
+
+    my $struct = $decode->next;  
+
+    p $struct;    # prints [ 'hello world' ]
+
+=head2 DESCRIPTION
+
+C<MsgPack::Decoder> objects take in the raw binary representation of 
+one or more MessagePack data structures, and convert it back into their
+Perl representations.
+
+=head2 METHODS
+
+=head3 new( %args )
+
+Constructor. Accepts the following arguments.
+
+=over
+
+=item emitter
+
+If sets to C<true>, incoming decoded data is immediately removed 
+from the buffer and broadcasted
+via a C<decoded> event encapsulated in a L<MsgPack::Decoder::Event::Decoded> object. 
+
+C<MsgPack::Decoder> consumes the L<Beam::Emitter> role and subscription/unsubscription
+to the C<decoded> event is done via its methods.
+
+    my $decoder = MsgPack::Decoder->new( emitter => 1 );
+    $decoder->on( 'decoded' => sub {
+        my $event = shift;
+        my @structs = $event->payload_list;
+        warn "we received ", scalar(@structs), " data structures";
+    });
+
+=back
+
+=head3 read( @binary_values ) 
+
+Reads in the raw binary to convert. The binary can be only a partial piece of the 
+encoded structures.  If so, all structures that can be decoded will be
+made available in the buffer, while the potentially last unterminated structure will
+remain "in flight".
+
+Returns how many structures were decoded.
+
+=head3 has_buffer
+
+Returns the number of decoded structures currently waiting in the buffer.
+
+=head3 next
+
+Returns the next structure from the buffer.
+
+    $decoder->read( $binary );
+
+    while( $decoder->has_buffer ) {
+        my $next = $decoder->next;
+        do_stuff( $next );
+    }
+
+Note that the returned structure could be C<undef>, so don't do:
+
+    $decoder->read( $binary );
+
+    # NO! $next could be 'undef'
+    while( my $next = $decoder->next ) {
+        do_stuff( $next );
+    }
+
+=head3 all 
+
+Returns (and flush from the buffer) all the currently available structures.
+
 =head3 read_all( @binaries )
 
 Reads the provided binary data and returns all structures decoded so far.
 
-    
     @data = $decoder->read_all($binary);
 
     # equivalent to
     
     $decoder->read(@binaries);
     @data = $decoder->all;
-
-=cut
-
-sub read_all($self,@vals){
-    $self->read(@vals);
-    $self->all;
-}
 
 =head3 read_next( @binaries )
 
@@ -219,12 +237,15 @@ If there is no data in the buffer, dies.
     $decoder->read(@binaries);
     $data = $decoder->next or die;
 
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2017, 2016, 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
-
-sub read_next($self,@vals){
-    $self->read(@vals);
-    carp "buffer is empty" unless $self->has_buffer;
-    $self->next;
-}
-
-1;

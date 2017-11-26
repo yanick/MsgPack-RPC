@@ -1,5 +1,6 @@
 package MsgPack::RPC::Event::Receive;
-
+our $AUTHORITY = 'cpan:YANICK';
+$MsgPack::RPC::Event::Receive::VERSION = '2.0.0';
 use Moose;
 
 extends 'Beam::Event';
@@ -23,3 +24,30 @@ sub error {
 }
 
 1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::RPC::Event::Receive
+
+=head1 VERSION
+
+version 2.0.0
+
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2017, 2016, 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut

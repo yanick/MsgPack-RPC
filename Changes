@@ -1,19 +1,12 @@
 Revision history for MessagePack
 
-{{$NEXT}}
+2.0.0 2017-11-26
   [ API CHANGES ]
-  - MooseX::Role::Loggable replaced by Log::Any.
-  - Decoder mechanics overhauled.
-
-  [ BUG FIXES ]
-
-  [ DOCUMENTATION ]
-
-  [ ENHANCEMENTS ]
-
-  [ NEW FEATURES ]
+    - MooseX::Role::Loggable replaced by Log::Any.
+    - Decoder mechanics overhauled.
 
   [ STATISTICS ]
+    - code churn: 32 files changed, 1133 insertions(+), 600 deletions(-)
 
 1.0.1 2017-03-15
   [ BUG FIXES ]

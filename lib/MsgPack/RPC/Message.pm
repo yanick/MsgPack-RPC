@@ -1,5 +1,30 @@
 package MsgPack::RPC::Message;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: a MessagePack-RPC notification
+$MsgPack::RPC::Message::VERSION = '2.0.0';
+
+use Moose;
+
+sub is_response     { 0 }
+sub is_request      { 0 }
+sub is_notification { 0 }
+
+
+1;
+
+__END__
+
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::RPC::Message - a MessagePack-RPC notification
+
+=head1 VERSION
+
+version 2.0.0
 
 =head1 SYNOPSIS
 
@@ -29,15 +54,15 @@ holding the arguments of the notification itself.
 
 =back
 
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2017, 2016, 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
 =cut
-
-use Moose;
-
-sub is_response     { 0 }
-sub is_request      { 0 }
-sub is_notification { 0 }
-
-
-1;
-
-
