@@ -58,7 +58,7 @@ has next => (
 
 sub build_next { [] }
 
-sub BUILD { $_[0]->log->debug('generator created') }
+sub BUILD { $_[0]->log->trace('generator created') }
 
 sub buffer_as_int {
     my $self = shift;
@@ -80,23 +80,23 @@ has push_decoded => sub {
     return sub { };
 };
 
-sub next_read($self,$data) {
+sub next_read($self) {
     my $arg = $self->next_args || $self->next_post_next || [ 'Any' ];
 
     my( $class, @args ) = @$arg;
 
     $class = 'MsgPack::Decoder::Generator::' . $class;
-    my $x = use_module($class)->new( 
+    use_module($class)->new( 
         push_decoded => $self->push_decoded, 
         post_next    => [ $self->next->@*, $self->post_next->@* ],
         @args 
     );
-
-    $x->read($data);
 }
 
+use experimental 'current_sub';
 
 sub read ( $self, $data ) {
+
     my $left_to_read = $self->bytes - $self->buffer_size;
 
     if ( $left_to_read > 0 ) {
@@ -104,9 +104,16 @@ sub read ( $self, $data ) {
         $self->log->trace( 'reading: ' . join ' ', map { sprintf "%#x", ord } split '', $mine );
         $self->append_buffer($mine);
         $left_to_read -= length $mine;
+
     }
 
-    return $left_to_read? $self : $self->next_read($data);
+    unless ( $left_to_read ) {
+        @_ = ( $self->next_read, $data );
+        goto __SUB__;
+        #return $self->next_read->read($data);
+    }
+
+    return $self;
 }
 
 __PACKAGE__->meta->make_immutable;
