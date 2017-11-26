@@ -44,4 +44,3 @@ t/encode.t
 t/encoding-decoding.t
 t/garbage_collect_responses.t
 t/rpc.t
-xt/release/unused-vars.t

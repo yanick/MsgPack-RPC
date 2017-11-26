@@ -13,7 +13,7 @@ has '+bytes' => (
 );
 
 sub BUILDARGS {
-    my( $class, %args ) = @_;
+    my( undef, %args ) = @_;
     $args{bytes} ||= $args{size} || 0;
     return \%args;
 }
