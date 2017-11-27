@@ -4,7 +4,6 @@ Revision history for MessagePack
   [ API CHANGES ]
 
   [ BUG FIXES ]
-  - Up dependency versions for Log::Any and Promises. (GH#9, GH#10, Slaven Rezić)
 
   [ DOCUMENTATION ]
 
@@ -13,6 +12,14 @@ Revision history for MessagePack
   [ NEW FEATURES ]
 
   [ STATISTICS ]
+
+2.0.1 2017-11-27
+  [ BUG FIXES ]
+    - Up dependency versions for Log::Any and Promises. (GH#9, GH#10,
+      Slaven Rezić)
+
+  [ STATISTICS ]
+    - code churn: 4 files changed, 15 insertions(+), 5 deletions(-)
 
 2.0.0 2017-11-26
   [ API CHANGES ]
