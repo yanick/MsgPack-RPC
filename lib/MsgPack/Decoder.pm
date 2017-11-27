@@ -39,7 +39,7 @@ use List::AllUtils qw/ reduce first first_index any /;
 use MsgPack::Type::Boolean;
 use MsgPack::Decoder::Generator::Any;
 
-use Log::Any;
+use Log::Any 1.701;
 
 use Moose;
 
