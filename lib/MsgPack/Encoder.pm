@@ -1,119 +1,7 @@
 package MsgPack::Encoder;
+our $AUTHORITY = 'cpan:YANICK';
 # ABSTRACT: Encode a structure into a MessagePack binary string
-
-=head1 SYNOPSIS
-
-    use MsgPack::Encoder;
-
-    my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
-
-    # using the msgpack_* functions 
-    
-    my $binary = msgpack [ "hello world" ];
-    # or
-    my $specific = msgpack_array16 [ "hello", "world" ];
-
-    use MsgPack::Decoder;
-
-    my $struct = MsgPack::Decoder->new->read_all($binary);
-
-=head1 DESCRIPTION
-
-C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
-its MessagePack serialization.
-
-In addition of the L<MsgPack::Encoder> class, the module exports
-C<msgpack_*> helper functions that would convert data structures to their
-MessagePack representations.
-
-=head1 EXPORTED FUNCTIONS
-
-=head2 Explicit conversion
-
-    $packed = msgpack_nil();
-
-    $packed = msgpack_bool($boolean);
-
-    $packed = msgpack_positive_fixnum($num);
-    $packed = msgpack_negative_fixnum($num);
-
-    $packed = msgpack_uint8($int);
-    $packed = msgpack_uint16($int);
-    $packed = msgpack_uint32($int);
-    $packed = msgpack_uint64($int);
-
-    $packed = msgpack_int8($int);
-    $packed = msgpack_int16($int);
-    $packed = msgpack_int32($int);
-    $packed = msgpack_int64($int);
-
-    $packed = msgpack_bin8($binary);
-    $packed = msgpack_bin16($binary);
-    $packed = msgpack_bin32($binary);
-
-    $packed = msgpack_float32($float);
-    $packed = msgpack_float64($float);
-
-    $packed = msgpack_fixstr($string);
-    $packed = msgpack_str8($string);
-    $packed = msgpack_str16($string);
-    $packed = msgpack_str32($string);
-
-    $packed = msgpack_fixarray(\@array);
-    $packed = msgpack_array16(\@array);
-    $packed = msgpack_array32(\@array);
-
-    $packed = msgpack_fixmap(\%hash);
-    $packed = msgpack_map16(\%hash);
-    $packed = msgpack_map32(\%hash);
-
-    $packed = msgpack_fixext1($type => $data);
-    $packed = msgpack_fixext2($type => $data);
-    $packed = msgpack_fixext4($type => $data);
-    $packed = msgpack_fixext8($type => $data);
-    $packed = msgpack_fixext16($type => $data);
-
-    $packed = msgpack_ext8($type => $data);
-    $packed = msgpack_ext16($type => $data);
-    $packed = msgpack_ext32($type => $data);
-    
-
-=head2 Coerced conversion
-
-    $packed = msgpack( $data )
-
-Which is equivalent to
-
-    $packed = MsgPack::Encoder->new(struct=>$data);
-
-
-=back
-
-=head1 OBJECT OVERLOADING
-
-=head2 Stringification
-
-The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
-
-
-    print MsgPack::Encoder->new( struct => $foo );
-    
-    # equivalent to
-
-    print MsgPack::Encoder->new( struct => $foo )->encoded;
-
-=head1 METHODS
-
-=head2 new( struct => $perl_struct )
-
-The constructor accepts a single argument, C<struct>, which is the perl structure (or simple scalar)
-to encode.
-
-=head2 encoded
-
-Returns the MessagePack representation of the structure.
-
-=cut
+$MsgPack::Encoder::VERSION = '2.0.1';
 
 use strict;
 use warnings;
@@ -589,4 +477,138 @@ sub msgpack($data) {
 
 1;
 
+__END__
 
+=pod
+
+=encoding UTF-8
+
+=head1 NAME
+
+MsgPack::Encoder - Encode a structure into a MessagePack binary string
+
+=head1 VERSION
+
+version 2.0.1
+
+=head1 SYNOPSIS
+
+    use MsgPack::Encoder;
+
+    my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
+
+    # using the msgpack_* functions 
+    
+    my $binary = msgpack [ "hello world" ];
+    # or
+    my $specific = msgpack_array16 [ "hello", "world" ];
+
+    use MsgPack::Decoder;
+
+    my $struct = MsgPack::Decoder->new->read_all($binary);
+
+=head1 DESCRIPTION
+
+C<MsgPack::Encoder> objects encapsulate a Perl data structure, and provide
+its MessagePack serialization.
+
+In addition of the L<MsgPack::Encoder> class, the module exports
+C<msgpack_*> helper functions that would convert data structures to their
+MessagePack representations.
+
+=head1 EXPORTED FUNCTIONS
+
+=head2 Explicit conversion
+
+    $packed = msgpack_nil();
+
+    $packed = msgpack_bool($boolean);
+
+    $packed = msgpack_positive_fixnum($num);
+    $packed = msgpack_negative_fixnum($num);
+
+    $packed = msgpack_uint8($int);
+    $packed = msgpack_uint16($int);
+    $packed = msgpack_uint32($int);
+    $packed = msgpack_uint64($int);
+
+    $packed = msgpack_int8($int);
+    $packed = msgpack_int16($int);
+    $packed = msgpack_int32($int);
+    $packed = msgpack_int64($int);
+
+    $packed = msgpack_bin8($binary);
+    $packed = msgpack_bin16($binary);
+    $packed = msgpack_bin32($binary);
+
+    $packed = msgpack_float32($float);
+    $packed = msgpack_float64($float);
+
+    $packed = msgpack_fixstr($string);
+    $packed = msgpack_str8($string);
+    $packed = msgpack_str16($string);
+    $packed = msgpack_str32($string);
+
+    $packed = msgpack_fixarray(\@array);
+    $packed = msgpack_array16(\@array);
+    $packed = msgpack_array32(\@array);
+
+    $packed = msgpack_fixmap(\%hash);
+    $packed = msgpack_map16(\%hash);
+    $packed = msgpack_map32(\%hash);
+
+    $packed = msgpack_fixext1($type => $data);
+    $packed = msgpack_fixext2($type => $data);
+    $packed = msgpack_fixext4($type => $data);
+    $packed = msgpack_fixext8($type => $data);
+    $packed = msgpack_fixext16($type => $data);
+
+    $packed = msgpack_ext8($type => $data);
+    $packed = msgpack_ext16($type => $data);
+    $packed = msgpack_ext32($type => $data);
+
+=head2 Coerced conversion
+
+    $packed = msgpack( $data )
+
+Which is equivalent to
+
+    $packed = MsgPack::Encoder->new(struct=>$data);
+
+=back
+
+=head1 OBJECT OVERLOADING
+
+=head2 Stringification
+
+The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
+
+    print MsgPack::Encoder->new( struct => $foo );
+    
+    # equivalent to
+
+    print MsgPack::Encoder->new( struct => $foo )->encoded;
+
+=head1 METHODS
+
+=head2 new( struct => $perl_struct )
+
+The constructor accepts a single argument, C<struct>, which is the perl structure (or simple scalar)
+to encode.
+
+=head2 encoded
+
+Returns the MessagePack representation of the structure.
+
+=head1 AUTHOR
+
+Yanick Champoux <yanick@cpan.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+This software is copyright (c) 2017, 2016, 2015 by Yanick Champoux.
+
+This is free software; you can redistribute it and/or modify it under
+the same terms as the Perl 5 programming language system itself.
+
+=cut
