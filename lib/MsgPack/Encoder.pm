@@ -7,8 +7,8 @@ package MsgPack::Encoder;
 
     my $binary = MsgPack::Encoder->new( struct => [ "hello world" ] )->encoded;
 
-    # using the msgpack_* functions 
-    
+    # using the msgpack_* functions
+
     my $binary = msgpack [ "hello world" ];
     # or
     my $specific = msgpack_array16 [ "hello", "world" ];
@@ -76,7 +76,7 @@ MessagePack representations.
     $packed = msgpack_ext8($type => $data);
     $packed = msgpack_ext16($type => $data);
     $packed = msgpack_ext32($type => $data);
-    
+
 
 =head2 Coerced conversion
 
@@ -97,7 +97,7 @@ The stringification of a C<MsgPack::Encoder> object is its MessagePack encoding.
 
 
     print MsgPack::Encoder->new( struct => $foo );
-    
+
     # equivalent to
 
     print MsgPack::Encoder->new( struct => $foo )->encoded;
@@ -381,42 +381,42 @@ sub msgpack_int64($num) { pack 'Cq*', 0xd3, $num }
 
 
 sub msgpack_fixext1 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 1, size => 1, type => $_[0], data => $_[1] );
     chr( 0xd4 ) . chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_fixext2 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 1, size => 2, type => $_[0], data => $_[1] );
     chr( 0xd5 ) . chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_fixext4 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 1, size => 4, type => $_[0], data => $_[1] );
     chr( 0xd6 ) . chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_fixext8 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 1, size => 8, type => $_[0], data => $_[1] );
     chr( 0xd7 ) . chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_fixext16 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 1, size => 16, type => $_[0], data => $_[1] );
     chr( 0xd8 ) . chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_ext8 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 0, type => $_[0], data => $_[1] );
     chr( 0xc7 ) . chr( $ext->size ), chr( $ext->type ) . $ext->padded_data;
 }
 sub msgpack_ext16 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 0, type => $_[0], data => $_[1] );
     pack( 'CS>C', 0xc8, $ext->size, $ext->type ) . $ext->padded_data;
 }
 sub msgpack_ext32 {
-    my $ext = @_ == 1 ? shift 
+    my $ext = @_ == 1 ? shift
         : MsgPack::Type::Ext->new( fix => 0, type => $_[0], data => $_[1] );
     pack( 'CL>C', 0xc9, $ext->size, $ext->type ) . $ext->padded_data;
 }
@@ -445,7 +445,7 @@ my $MessagePack;
 
 sub msgpack_fixarray {
     my @inner = @{ shift @_ };
-    
+
     my $size = @inner;
 
     join '', chr( 0x90 + $size ), map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
@@ -453,25 +453,25 @@ sub msgpack_fixarray {
 
 sub msgpack_array16 {
     my @inner = @{ shift @_ };
-    
+
     my $size = @inner;
 
-    join '', pack( 'CS>', 0xdc, $size ), 
+    join '', pack( 'CS>', 0xdc, $size ),
         map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
 }
 
 sub msgpack_array32 {
     my @inner = @{ shift @_ };
-    
+
     my $size = @inner;
 
-    join '', pack( 'CL>', 0xdd, $size ), 
+    join '', pack( 'CL>', 0xdd, $size ),
         map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
 }
 
 sub msgpack_fixmap {
     my @inner = %{ shift @_ };
-    
+
     my $size = @inner/2;
 
     join '', chr( 0x80 + $size ), map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
@@ -479,19 +479,19 @@ sub msgpack_fixmap {
 
 sub msgpack_map16 {
     my @inner = %{ shift @_ };
-    
+
     my $size = @inner/2;
 
-    join '', pack( 'CS>', 0xde, $size ), 
+    join '', pack( 'CS>', 0xde, $size ),
         map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
 }
 
 sub msgpack_map32 {
     my @inner = %{ shift @_ };
-    
+
     my $size = @inner/2;
 
-    join '', pack( 'CL>', 0xdf, $size ), 
+    join '', pack( 'CL>', 0xdf, $size ),
         map { $$_ } map { $MessagePack->assert_coerce($_) } @inner;
 }
 
@@ -503,16 +503,16 @@ $MessagePack = Type::Tiny->new(
     name => 'MessagePack',
 )->plus_coercions(
     $Boolean => sub { _packed msgpack_bool $_ },
-    $PositiveFixInt      => sub { _packed msgpack_positive_fixnum $_ }, 
-    $NegativeFixInt      => sub { _packed msgpack_negative_fixnum $_ }, 
+    $PositiveFixInt      => sub { _packed msgpack_positive_fixnum $_ },
+    $NegativeFixInt      => sub { _packed msgpack_negative_fixnum $_ },
     $UInt8 => sub { _packed msgpack_uint8 $_ },
     $UInt16 => sub { _packed msgpack_uint16 $_ },
     $UInt32 => sub { _packed msgpack_uint32 $_ },
     $UInt64 => sub { _packed msgpack_uint64 $_ },
-    $Int8                => sub { _packed msgpack_int8 $_ }, 
-    $Int16                => sub { _packed msgpack_int16 $_ }, 
-    $Int32                => sub { _packed msgpack_int32 $_ }, 
-    $Int64                => sub { _packed msgpack_int64 $_ }, 
+    $Int8                => sub { _packed msgpack_int8 $_ },
+    $Int16                => sub { _packed msgpack_int16 $_ },
+    $Int32                => sub { _packed msgpack_int32 $_ },
+    $Int64                => sub { _packed msgpack_int64 $_ },
     $Float64 => sub { _packed msgpack_float64 $_ },
     $FixStr ,=> sub { _packed msgpack_fixstr $_ },
     $Str8 ,=> sub { _packed msgpack_str8 $_ },

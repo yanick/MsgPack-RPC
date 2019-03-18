@@ -9,8 +9,8 @@ package MsgPack::RPC;
 
     $rpc->notify( 'something' => [ 'with', 'args' ] );
 
-    $rpc->request( 
-        request_method => [ 'some', 'args' ] 
+    $rpc->request(
+        request_method => [ 'some', 'args' ]
     )->on_done(sub{
         print "replied with: ", @_;
     });
@@ -50,7 +50,7 @@ Returns the IO descriptor(s) used by the object.
 Sends the request. The C<$id> is optional, and will be automatically
 assigned from an internal self-incrementing list if not given.
 
-Returns a promise that will be fulfilled once a response is received. The response can be either a success 
+Returns a promise that will be fulfilled once a response is received. The response can be either a success
 or a failure, and in both case the fulfilled promise will be given whatever values are passed in the response.
 
     $rpc->request( 'ls', [ '/home', '/tmp' ] )
@@ -60,9 +60,9 @@ or a failure, and in both case the fulfilled promise will be given whatever valu
 
 =head2 notify( $method, $args )
 
-Sends a notification. 
+Sends a notification.
 
-=head2 subscribe( $event_name, \&callback ) 
+=head2 subscribe( $event_name, \&callback )
 
     # 'ping' is a request
     $rpc->subscribe( ping => sub($msg) {
@@ -81,14 +81,14 @@ is received, the callback will be called. The callback will be passed either a L
 a notification) or
 L<MsgPack::RPC::Message::Request> object.
 
-Events can have any number of callbacks assigned to them. 
+Events can have any number of callbacks assigned to them.
 
 The subscription system is implemented using the L<Beam::Emitter> role.
 
 =head2 loop( $end_condition )
 
 Reads and process messages from the incoming stream, endlessly if not be given an optional C<$end_condition>.
-The end condition can be given a number of messages to read, or a promise that will end the loop once 
+The end condition can be given a number of messages to read, or a promise that will end the loop once
 fulfilled.
 
     # loop until we get a response from our request
@@ -111,6 +111,12 @@ fulfilled.
 =item L<MsgPack::RPC::Message>
 
 =item L<MsgPack::RPC::Message::Request>
+
+=item L<MsgPack::Encoder>
+
+=item L<MsgPack::Decoder>
+
+=item L<Data::MessagePack> (alternative to C<MsgPack::Encoder> and C<MsgPack::Decoder>.
 
 =back
 
@@ -164,7 +170,7 @@ sub bin_2_hex {
 has log => (
     is => 'ro',
     lazy => 1,
-    default => sub { 
+    default => sub {
         require Log::Any;
         Log::Any->get_logger;
     },
@@ -262,7 +268,7 @@ has decoder => (
     lazy => 1,
     default => sub {
         my $self = shift;
-        
+
         my $decoder = MsgPack::Decoder->new( emitter => 1 );
 
         $decoder->on( decoded => sub {
@@ -328,9 +334,9 @@ sub add_response_callback {
     require IO::Async::Timer::Countdown;
     my $timeout = IO::Async::Timer::Countdown->new(
         delay => $self->timeout,
-        on_expire => sub { 
+        on_expire => sub {
             delete $self->response_callbacks->{$id};
-            $deferred->reject('timeout'); 
+            $deferred->reject('timeout');
         }
     );
 
