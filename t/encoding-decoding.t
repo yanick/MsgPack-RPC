@@ -189,7 +189,7 @@ subtest int => sub {
 
 subtest float => sub {
     for ( 32, 64 ) {
-        subtest $_, sub {
+        subtest "float$_", sub {
             plan skip_all => '32bits architecture' if $_ == 64 and $is_32bits;
             my $e = eval qq{ msgpack_float$_ 1/3 };
             is length $e => 1 + ($_ / 8), "right number of characters";
