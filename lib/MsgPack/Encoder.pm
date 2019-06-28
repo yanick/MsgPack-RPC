@@ -575,8 +575,6 @@ Which is equivalent to
 
     $packed = MsgPack::Encoder->new(struct=>$data);
 
-=back
-
 =head1 OBJECT OVERLOADING
 
 =head2 Stringification
