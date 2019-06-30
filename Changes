@@ -6,6 +6,7 @@ Revision history for MessagePack
   [ BUG FIXES ]
 
   [ DOCUMENTATION ]
+    - Fixed pod error as reported by CPANTS. (GH#12, Mohammad S Anwar)
 
   [ ENHANCEMENTS ]
 
