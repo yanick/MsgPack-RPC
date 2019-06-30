@@ -1,18 +1,11 @@
 Revision history for MessagePack
 
-{{$NEXT}}
-  [ API CHANGES ]
-
-  [ BUG FIXES ]
-
+2.0.3 2019-06-30
   [ DOCUMENTATION ]
     - Fixed pod error as reported by CPANTS. (GH#12, Mohammad S Anwar)
 
-  [ ENHANCEMENTS ]
-
-  [ NEW FEATURES ]
-
   [ STATISTICS ]
+    - code churn: 7 files changed, 98 insertions(+), 9 deletions(-)
 
 2.0.2 2019-03-18
   [ MISC ]
